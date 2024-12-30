@@ -1,33 +1,49 @@
+import cv2
 import numpy as np
-from skimage import io, feature, transform, draw
+import matplotlib.pyplot as plt
 
 
 def extract_circle_and_count_stripes(image_path):
-    # Read the image
-    img = io.imread(image_path, as_gray=True)
+    # Load the image
+    image = cv2.imread(image_path)  # Replace 'your_image.jpg' with your file path
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)  # Convert to grayscale
+    cimg = cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
 
-    # Create a circular mask
-    height, width = img.shape
-    center = (width // 2, height // 2)
-    radius = min(width, height) // 2
-    mask = np.zeros(img.shape, dtype=bool)
-    rr, cc = draw.circle(center[1], center[0], radius)
-    mask[rr, cc] = True
+    # Apply Gaussian blur to reduce noise
+    gray_blurred = cv2.GaussianBlur(gray, (9, 9), 2)
 
-    # Apply the mask
-    masked_img = img * mask
+    # Detect circles using Hough Circle Transform
+    image_shape = image.shape
+    maxRadius = max(image_shape)
+    circles = cv2.HoughCircles(
+        gray_blurred,
+        cv2.HOUGH_GRADIENT,
+        dp=1.2,
+        param1=10,  # Upper threshold for the internal Canny edge detector
+        param2=30,  # Threshold for center detection
+        minDist=int(maxRadius),
+        minRadius=maxRadius // 4,  # Minimum radius of the circles
+        maxRadius=maxRadius  # Maximum radius of the circles
+    )
 
-    # Edge detection
-    edges = feature.canny(masked_img, sigma=3)
+    # If circles are detected, draw them
+    if circles is not None:
+        circles = np.uint16(np.around(circles))  # Round the float values to integers
+        centerX,centerY,radius = circles[0, :][0]
+        cv2.circle(image, (centerX,centerY),radius, (0, 255, 0), 2)
 
-    # Hough transform for circle detection
-    hough_radii = np.arange(10, 50, 2)
-    hough_res = transform.hough_circle(edges, hough_radii)
+        Y, X = np.ogrid[:image_shape[0], :image_shape[1]]
 
-    # Find peaks in Hough space
-    accums, cx, cy, radii = transform.hough_circle_peaks(hough_res, hough_radii, total_num_peaks=1)
+        dist_from_center = np.sqrt((X - centerX) ** 2 + (Y - centerY) ** 2)
+        mask = dist_from_center <= radius
 
-    # Count stripes (simplified approach)
-    num_stripes = len(feature.peak_local_max(masked_img, min_distance=10))
+        # Apply the mask
+        masked_image = np.copy(image)
+        masked_image[~mask] = 0  # Set pixels outside the mask to black
 
-    return num_stripes, masked_img
+        cv2.imshow('detected circles', cimg)
+        cv2.imshow('masked circles', masked_image)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+    exit()
