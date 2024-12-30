@@ -6,9 +6,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 resulted_circles = r"C:\Users\shoha\PycharmProjects\Photoelasticity\drawn_circles"
+resulted_stripe = r"C:\Users\shoha\PycharmProjects\Photoelasticity\stripes"
+center_strip_size = 30
+percentage_of_circle_to_take=90
 
-
-def extract_circle_and_count_stripes(image_path: WindowsPath):
+def extract_circle_and_count_stripes(image_path: WindowsPath) -> np.array:
     # load the image, clone it for output, and then convert it to grayscale
     image = cv2.imread(image_path)
     output = image.copy()
@@ -34,7 +36,17 @@ def extract_circle_and_count_stripes(image_path: WindowsPath):
         cv2.circle(output, (x, y), r, (0, 255, 0), 4)
 
         # show the output image
-        output_path = image_path.parent.parent / "drawn_circles" / image_path.name
-        output_path.parent.mkdir(exist_ok=True, parents=True)
-        output_path.touch()
-        assert cv2.imwrite(os.path.join(resulted_circles, image_path.name), np.hstack([output]), )
+        # save_circle_image(image_path, output)
+
+        prominent_r = r*percentage_of_circle_to_take//100
+
+        cropped_center = gray[y - center_strip_size:y + center_strip_size,x - prominent_r:x + prominent_r]
+        save_strip_image(image_path,cropped_center)
+        return np.mean(cropped_center,0)
+
+
+def save_circle_image(image_path, output):
+    assert cv2.imwrite(os.path.join(resulted_circles, image_path.name), np.hstack([output]), )
+
+def save_strip_image(image_path, cropped_center):
+    assert cv2.imwrite(os.path.join(resulted_stripe, image_path.name), np.hstack([cropped_center]), )
