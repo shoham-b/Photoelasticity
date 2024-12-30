@@ -3,12 +3,13 @@ from pathlib import WindowsPath
 
 import cv2
 import numpy as np
-import matplotlib.pyplot as plt
+from networkx.algorithms.distance_measures import radius
 
 resulted_circles = r"C:\Users\shoha\PycharmProjects\Photoelasticity\drawn_circles"
 resulted_stripe = r"C:\Users\shoha\PycharmProjects\Photoelasticity\stripes"
 center_strip_size = 30
-percentage_of_circle_to_take=90
+percentage_of_circle_to_take = 95
+
 
 def extract_circle_and_count_stripes(image_path: WindowsPath) -> np.array:
     # load the image, clone it for output, and then convert it to grayscale
@@ -38,15 +39,16 @@ def extract_circle_and_count_stripes(image_path: WindowsPath) -> np.array:
         # show the output image
         # save_circle_image(image_path, output)
 
-        prominent_r = r*percentage_of_circle_to_take//100
+        prominent_r = r * percentage_of_circle_to_take // 100
 
-        cropped_center = gray[y - center_strip_size:y + center_strip_size,x - prominent_r:x + prominent_r]
-        save_strip_image(image_path,cropped_center)
-        return np.mean(cropped_center,0)
+        cropped_center = gray[y - center_strip_size:y + center_strip_size, x - prominent_r:x + prominent_r]
+        save_strip_image(image_path, cropped_center)
+        return np.mean(cropped_center, 0), r
 
 
 def save_circle_image(image_path, output):
     assert cv2.imwrite(os.path.join(resulted_circles, image_path.name), np.hstack([output]), )
+
 
 def save_strip_image(image_path, cropped_center):
     assert cv2.imwrite(os.path.join(resulted_stripe, image_path.name), np.hstack([cropped_center]), )
