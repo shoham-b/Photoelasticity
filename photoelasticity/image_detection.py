@@ -43,7 +43,8 @@ def extract_circle_and_count_stripes(image_path: WindowsPath) -> np.array:
 
         cropped_center = gray[y - center_strip_size:y + center_strip_size, x - prominent_r:x + prominent_r]
         save_strip_image(image_path, cropped_center)
-        return np.mean(cropped_center, 0), r
+        oneDintensities = np.mean(cropped_center, 0)
+        return oneDintensities
 
 
 def save_circle_image(image_path, output):
