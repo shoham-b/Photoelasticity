@@ -1,29 +1,39 @@
 from photoelasticity.data import get_day_data
+from photoelasticity.data_processing import process_data
 from photoelasticity.fit_curve import find_fit_params
 from photoelasticity.image_detection import extract_circle_and_count_stripes
-from photoelasticity.data_processing import strip_dark_boundaries, process_data
 
 if __name__ == '__main__':
     # Usage
-    interesting_images = [
-        f"V_0{image_num}.jpg"
-        for image_num in range(249, 282)
-        if image_num != 260
+    related_data = [
+        [247, 259, 263, 275, 276],
+        [248, 258, 264, 274, 277],
+        [249, 257, 265, 273, 278],
+        [250, 256, 266, 272, 279],
+        [251, 255, 267, 271, 280],
+        [252, 254, 268, 270, 281]
     ]
-    all_interesting_files = list(get_day_data(1, interesting_images))
-    for image_path in all_interesting_files:
-        data = extract_circle_and_count_stripes(image_path)
-        if image_path.name == "V_0256.jpg":
-            data = process_data(data)
-            find_fit_params(data, image_path.name, 9)
-        elif image_path.name == "V_0257.jpg":
-            data = process_data(data, 0.4, center_max=True)
-            find_fit_params(data, image_path.name, 8)
-        elif image_path.name == "V_0258.jpg":
-            data = process_data(data, 0.4)
-            find_fit_params(data, image_path.name, 4)
-        else:
-            data = (
-                process_data(data))
-
-            find_fit_params(data, image_path.name)
+    interesting_images = [
+        [f"V_0{image_num}.jpg"
+         for image_num in bundle]
+        for bundle in related_data
+    ]
+    related_data = [
+        [extract_circle_and_count_stripes(image_path)
+         for image_path in get_day_data(1, interesting_images_bundle)]
+        for interesting_images_bundle in interesting_images
+    ]
+    processed_data = [
+        [process_data(data) for data in bundle if data is not None]
+        for bundle in related_data
+    ]
+    # flat_data = [x for y in processed_data for x in y[2:]]
+    # for i, data in enumerate(flat_data):
+    #     find_fit_params(data, f"data of {i}")
+# for i, data in enumerate(processed_data):
+#     data = [subdata for subdata in data if len(subdata) > 2000]
+#     min_len = min(len(subdata) for subdata in data)
+#     min_rad = min_len // 2
+#     truncated_data = [subdata[len(subdata) - min_rad:len(subdata) + min_rad] for subdata in data]
+#     average_data = np.mean(truncated_data, axis=0)
+#     find_fit_params(average_data, f"data of {i}")
