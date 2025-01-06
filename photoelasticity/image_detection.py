@@ -2,9 +2,7 @@ import os
 from pathlib import WindowsPath
 
 import cv2
-import matplotlib.pyplot as plt
 import numpy as np
-from networkx.algorithms.distance_measures import radius
 
 resulted_circles = r"C:\Users\shoha\PycharmProjects\Photoelasticity\drawn_circles"
 resulted_stripe = r"C:\Users\shoha\PycharmProjects\Photoelasticity\stripes"
@@ -14,15 +12,16 @@ class ImageError(Exception):
     pass
 
 
-def extract_circle_and_count_stripes(image_path: WindowsPath) -> np.array:
+def extract_circle_and_count_stripes(image_path: WindowsPath, min_rad_percent, max_rad_percent) -> np.array:
     # load the image, clone it for output, and then convert it to grayscale
     image = cv2.imread(image_path)
     output = image.copy()
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    canny = cv2.Canny(gray, 10, 20)
+    canny = cv2.Canny(gray, 20, 20)
     image_height, image_width = gray.shape
-    max_radius = int(min(image_height, image_width) * 0.98) // 2  # Maximum radius
-    min_radius = int(max_radius * 0.9)
+    max_fitting_radius = min(image_height, image_width) // 2
+    max_radius = int(max_fitting_radius * max_rad_percent)
+    min_radius = int(max_fitting_radius * min_rad_percent)
     circles = cv2.HoughCircles(canny,
                                cv2.HOUGH_GRADIENT,
                                16, 30,
@@ -31,7 +30,7 @@ def extract_circle_and_count_stripes(image_path: WindowsPath) -> np.array:
 
     # ensure at least some circles were found
     if circles is None:
-        raise ImageError("no circles detected")
+        raise ImageError("No circles detected")
 
     # convert the (x, y) coordinates and radius of the circles to integers
     circles = np.round(circles[0, :]).astype("int")
@@ -47,7 +46,6 @@ def extract_circle_and_count_stripes(image_path: WindowsPath) -> np.array:
 
     # numed_data = find_center_strip(gray, image_path, x, y)
     return gray[y - r:y + r, x - r:x + r]
-
 
 
 def save_circle_image(image_path, output):

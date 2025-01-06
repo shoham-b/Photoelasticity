@@ -4,7 +4,7 @@ from matplotlib import pyplot as plt
 from scipy.optimize import Bounds
 from scipy.signal import argrelmax
 
-from photoelasticity.data_processing import moving_average, process_data
+from photoelasticity.array_tools import moving_average
 
 
 def assumed_function_with_offset(x, I0, A, offset):

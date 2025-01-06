@@ -16,12 +16,12 @@ def do_day_1():
         [252, 254, 268, 270, 281]
     ]
     interesting_images = [
-        [f"V_0{image_num}.jpg"
+        [f"V_0{str(image_num).zfill(3)}.jpg"
          for image_num in bundle]
         for bundle in related_data
     ]
     related_data = [
-        [extract_circle_and_count_stripes(image_path)
+        [extract_circle_and_count_stripes(image_path, 0.9, 0.98)
          for image_path in get_day_data(1, interesting_images_bundle)]
         for interesting_images_bundle in interesting_images
     ]
