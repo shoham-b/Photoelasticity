@@ -10,9 +10,9 @@ def moving_average(x, w):
     return np.convolve(x, np.ones(w), 'valid') / w
 
 
-def process_data(data, intensity_threshold_percentage=0.44, center_max=False):
-    # data = strip_dark_boundaries(data, intensity_threshold_percentage)
-    data = center_data_around_radius(data, center_max)
+def process_data(data, intensity_threshold_percentage=0.34, center_max=False):
+    data = strip_dark_boundaries(data, intensity_threshold_percentage)
+    # data = center_data_around_radius(data, center_max)
 
     return data
 
@@ -28,51 +28,52 @@ def strip_dark_boundaries(data, intensity_threshold_percentage=0.44):
     right_idx = len(data)
     while right_idx > 0 and abs(data[right_idx - 1]) <= threshold:
         right_idx -= 1
-    data = data[left_idx:right_idx]
-
-    data = data - np.min(data)
+    largest_boundary = max(left_idx, len(data) - right_idx)
+    data = data[largest_boundary:-largest_boundary - 1]
 
     return data
 
 
 def center_data_around_radius(data, center_max=False):
-    # if center_max:
-    #     averaging_amount = 200
-    #     averaged_data = moving_average(data, averaging_amount)
-    #     minima_indices = argrelmin(averaged_data, order=ARG_EXTREME_ORDER)[0]
-    #     maxima = argmax(averaged_data)
-    #
-    #     # Find two minima to the left and right of the max
-    #     left_minima = minima_indices[minima_indices < maxima]
-    #     right_minima = minima_indices[minima_indices > maxima]
-    #
-    #     closest_left_min = left_minima[-1]
-    #     closest_right_min = right_minima[0]
-    #     center_idx = (closest_left_min + closest_right_min) // 2
-    #     highest_minima_idx = center_idx + averaging_amount // 2
-    #
-    #
-    # else:
-    #     averaging_amount = 20
-    #     averaged_data = moving_average(data, averaging_amount)
-    #     minima_indices = argrelmin(averaged_data, order=ARG_EXTREME_ORDER)[0]
-    #     minima_indices_without_bounds = minima_indices[1:-1]
-    #
-    #     higest_minima_averaging_index = minima_indices_without_bounds[
-    #         np.argmax(averaged_data[minima_indices_without_bounds])]
-    #     center_idx = higest_minima_averaging_index
-    #     highest_minima_idx = center_idx + averaging_amount // 2
-    #
-    # data = center_around(data, highest_minima_idx)
-    # data = fit_to_find_center(data)
+    if center_max:
+        averaging_amount = 200
+        averaged_data = moving_average(data, averaging_amount)
+        minima_indices = argrelmin(averaged_data, order=ARG_EXTREME_ORDER)[0]
+        maxima = argmax(averaged_data)
+
+        # Find two minima to the left and right of the max
+        left_minima = minima_indices[minima_indices < maxima]
+        right_minima = minima_indices[minima_indices > maxima]
+
+        closest_left_min = left_minima[-1]
+        closest_right_min = right_minima[0]
+        center_idx = (closest_left_min + closest_right_min) // 2
+        highest_minima_idx = center_idx + averaging_amount // 2
+
+
+    else:
+        averaging_amount = 20
+        averaged_data = moving_average(data, averaging_amount)
+        minima_indices = argrelmin(averaged_data, order=ARG_EXTREME_ORDER)[0]
+        minima_indices_without_bounds = minima_indices[1:-1]
+
+        higest_minima_averaging_index = minima_indices_without_bounds[
+            np.argmax(averaged_data[minima_indices_without_bounds])]
+        center_idx = higest_minima_averaging_index
+        highest_minima_idx = center_idx + averaging_amount // 2
+
+    data = center_around(data, highest_minima_idx)
+    data = fit_to_find_center(data)
     data = fine_tune_center(data)
     return data
 
 
 def fine_tune_center(data):
     averaging_amount = 150
-    averaged_data = moving_average(data, averaging_amount)
-
+    try:
+        averaged_data = moving_average(data, averaging_amount)
+    except ValueError:
+        pass
     minima_indices = argrelmin(averaged_data, order=ARG_EXTREME_ORDER)[0]
     if not minima_indices.any():
         return data

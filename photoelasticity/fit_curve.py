@@ -21,15 +21,12 @@ def assumed_function_without_offset(x, I0, A):
     return I0 * np.sin(A * zeta_stuff) ** 2
 
 
-def find_fit_params(data: np.array, image_title: str, override_maximas_count=None):
+def find_fit_params(data: np.array, image_title: str):
     print(f"For image title {image_title}")
     relative_indicies = np.array(range(-len(data) // 2, len(data) // 2))
     assert len(relative_indicies) == len(data)
 
-    if override_maximas_count is None:
-        maximas_count = get_maximas_count(data)
-    else:
-        maximas_count = override_maximas_count
+    maximas_count = get_maximas_count(data)
 
     results, _ = scipy.optimize.curve_fit(assumed_function_without_offset,
                                           relative_indicies,
