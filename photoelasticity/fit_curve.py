@@ -31,13 +31,14 @@ def find_fit_params(data: np.array, image_title: str, override_maximas_count=Non
     else:
         maximas_count = override_maximas_count
 
-    results, _ = scipy.optimize.curve_fit(assumed_function_with_offset,
+    results, _ = scipy.optimize.curve_fit(assumed_function_without_offset,
                                           relative_indicies,
                                           data,
-                                          p0=[90, maximas_count, 30],
-                                          bounds=((30, 1, 0), (100, 20, 40)))
+                                          p0=[90, maximas_count],
+                                          bounds=((30, 1), (100, 20)),
+                                          maxfev=5000)
     I0, A, *_ = results
-    fitted_data = assumed_function_with_offset(relative_indicies, *results)
+    fitted_data = assumed_function_without_offset(relative_indicies, *results)
 
     print(f"""
     fitted result is:

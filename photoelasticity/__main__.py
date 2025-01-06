@@ -5,7 +5,11 @@ from photoelasticity.data_processing import strip_dark_boundaries, process_data
 
 if __name__ == '__main__':
     # Usage
-    interesting_images = [f"V_0{image_num}.jpg" for image_num in range(254, 259)]
+    interesting_images = [
+        f"V_0{image_num}.jpg"
+        for image_num in range(249, 282)
+        if image_num != 260
+    ]
     all_interesting_files = list(get_day_data(1, interesting_images))
     for image_path in all_interesting_files:
         data = extract_circle_and_count_stripes(image_path)
@@ -19,5 +23,7 @@ if __name__ == '__main__':
             data = process_data(data, 0.4)
             find_fit_params(data, image_path.name, 4)
         else:
-            data = process_data(data)
+            data = (
+                process_data(data))
+
             find_fit_params(data, image_path.name)

@@ -2,13 +2,14 @@ import os
 from pathlib import WindowsPath
 
 import cv2
+import matplotlib.pyplot as plt
 import numpy as np
 from networkx.algorithms.distance_measures import radius
 
 resulted_circles = r"C:\Users\shoha\PycharmProjects\Photoelasticity\drawn_circles"
 resulted_stripe = r"C:\Users\shoha\PycharmProjects\Photoelasticity\stripes"
 center_strip_size = 30
-percentage_of_circle_to_take = 95
+percentage_of_circle_to_take = 90
 
 
 def extract_circle_and_count_stripes(image_path: WindowsPath) -> np.array:
@@ -38,13 +39,16 @@ def extract_circle_and_count_stripes(image_path: WindowsPath) -> np.array:
 
         # show the output image
         # save_circle_image(image_path, output)
+        plt.imshow(output)
 
         prominent_r = r * percentage_of_circle_to_take // 100
 
         cropped_center = gray[y - center_strip_size:y + center_strip_size, x - prominent_r:x + prominent_r]
-        save_strip_image(image_path, cropped_center)
+        # save_strip_image(image_path, cropped_center)
         oneDintensities = np.mean(cropped_center, 0)
-        return oneDintensities
+        mean_brightness = np.mean(oneDintensities)
+        numed_data = np.nan_to_num(oneDintensities, nan=mean_brightness)
+        return numed_data
 
 
 def save_circle_image(image_path, output):
