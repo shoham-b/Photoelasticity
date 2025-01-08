@@ -1,12 +1,8 @@
-import os
-from pathlib import WindowsPath
+from pathlib import WindowsPath, Path
 
 import cv2
 import diskcache
 import numpy as np
-
-resulted_circles = r"C:\Users\shoha\PycharmProjects\Photoelasticity\drawn_circles"
-resulted_stripe = r"C:\Users\shoha\PycharmProjects\Photoelasticity\stripes"
 
 
 class ImageError(Exception):
@@ -59,13 +55,16 @@ def extract_circle_and_count_stripes(image_path: WindowsPath, min_rad_percent, m
 
 
 def save_circle_image(image_path, output):
-    output_path = get_output_path(image_path)
-    assert cv2.imwrite(output_path, np.hstack([output]), )
+    output_path = get_output_path(image_path, 'circle')
+    assert cv2.imwrite(output_path, np.hstack([output]))
 
 
-def get_output_path(image_path):
-    return os.path.join(resulted_circles, image_path.name)
+def get_output_path(image_path, output_type):
+    output_dir = Path().parent.parent.parent.parent / f"drawn_{output_type}"
+    output_dir.mkdir(exist_ok=True, parents=True)
+    return (output_dir / image_path.name).absolute()
 
 
 def save_strip_image(image_path, cropped_center):
-    assert cv2.imwrite(os.path.join(resulted_stripe, image_path.name), np.hstack([cropped_center]), )
+    output_path = get_output_path(image_path, 'strip')
+    assert cv2.imwrite(output_path, np.hstack([cropped_center]))
