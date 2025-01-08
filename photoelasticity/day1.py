@@ -26,9 +26,13 @@ def do_day_1():
          for image_path in get_day_data(1, interesting_images_bundle)]
         for interesting_images_bundle in interesting_images
     ]
-    guessess = [4.98E+00, 7.01E+00, 16, 18, 24]
+    guess_I =    [20]*5
+    guess_A =    [5, 8,   12, 15, 20]
+    guess_offset=[-71,-15,-50,-50,-100]
+    images_num=len(guess_A)
+    guesses=[[guess_I[i], guess_A[i], guess_offset[i]] for i in range(images_num)]
     for i, data in enumerate(related_data):
         max_r = max(len(subdata) for subdata in data)
         resized_data = [resize_matrix(subdata, (max_r, max_r)) for subdata in data]
         center_1D = np.mean(resized_data, axis=0)
-        find_fit_params(center_1D, f"Plane polariscope with stress {stresses[i]}N", guessess[i])
+        find_fit_params(center_1D, f"Plane polariscope with stress {stresses[i]}N", guesses[i])
