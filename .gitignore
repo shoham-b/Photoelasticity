@@ -169,3 +169,7 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+.\drawn_circle\
+.\graphs\
+.\image_cache\
+.\lyx\
