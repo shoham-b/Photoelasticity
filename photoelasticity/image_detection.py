@@ -17,7 +17,7 @@ def extract_circle_and_count_stripes(image_path: WindowsPath, min_rad_percent, m
     # load the image, clone it for output, and then convert it to grayscale
     cache = diskcache.Cache("image_cache")
     cached = cache.get(image_path)
-    if cached:
+    if cached is not None:
         return cached
 
     image = cv2.imread(image_path)
