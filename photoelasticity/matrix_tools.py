@@ -13,8 +13,7 @@ def resize_matrix(matrix, target_shape):
 def find_center_strip(data):
     center_strip_size = 4 * len(data) // 100
     x = y = r = len(data) // 2
-    prominent_r = r * 100
-    cropped_center = data[y - center_strip_size:y + center_strip_size, x - prominent_r:x + prominent_r]
+    cropped_center = data[y - center_strip_size:y + center_strip_size, x - r:x + r]
     oneDintensities = np.mean(cropped_center, 0)
     mean_brightness = np.mean(oneDintensities)
     numed_data = np.nan_to_num(oneDintensities, nan=mean_brightness)
