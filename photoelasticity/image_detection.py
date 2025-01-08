@@ -2,6 +2,7 @@ import os
 from pathlib import WindowsPath
 
 import cv2
+import diskcache
 import numpy as np
 
 resulted_circles = r"C:\Users\shoha\PycharmProjects\Photoelasticity\drawn_circles"
@@ -14,6 +15,11 @@ class ImageError(Exception):
 
 def extract_circle_and_count_stripes(image_path: WindowsPath, min_rad_percent, max_rad_percent) -> np.array:
     # load the image, clone it for output, and then convert it to grayscale
+    cache = diskcache.Cache("image_cache")
+    cached = cache.get(image_path)
+    if cached:
+        return cached
+
     image = cv2.imread(image_path)
     output = image.copy()
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -45,7 +51,11 @@ def extract_circle_and_count_stripes(image_path: WindowsPath, min_rad_percent, m
     # plt.imshow(output)
 
     # numed_data = find_center_strip(gray, image_path, x, y)
-    return gray[y - r:y + r, x - r:x + r]
+    result = gray[y - r:y + r, x - r:x + r]
+
+    cache[image_path] = result
+
+    return result
 
 
 def save_circle_image(image_path, output):
