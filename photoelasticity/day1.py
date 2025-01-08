@@ -26,7 +26,7 @@ def do_day_1():
          for image_path in get_day_data(1, interesting_images_bundle)]
         for interesting_images_bundle in interesting_images
     ]
-    guessess = [4.98E+00, 7.01E+00, 16, 18, 24 ]
+    guessess = [4.98E+00, 7.01E+00, 16, 18, 24]
     for i, data in enumerate(related_data):
         max_r = max(len(subdata) for subdata in data)
         resized_data = [resize_matrix(subdata, (max_r, max_r)) for subdata in data]

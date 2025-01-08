@@ -11,13 +11,6 @@ class FitError(Exception):
     pass
 
 
-def assumed_function_with_offset(x, I0, A, offset):
-    radius = len(x) // 2
-    zeta = x / radius
-    zeta_stuff = (1 - zeta ** 2) / (1 + zeta ** 2) ** 2
-    return I0 * np.sin(A * zeta_stuff + offset) ** 2
-
-
 def make_assumed_function(radius):
     def assumed_function_without_offset(x, I0, A, offset=0):
         offset = int(offset)
