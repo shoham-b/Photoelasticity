@@ -11,7 +11,7 @@ class ImageError(Exception):
 
 def extract_circle_and_count_stripes(image_path: WindowsPath, min_rad_percent, max_rad_percent) -> np.array:
     # load the image, clone it for output, and then convert it to grayscale
-    cache = diskcache.Cache("image_cache")
+    cache = diskcache.Cache("../image_cache")
     cached = cache.get(image_path)
     if cached is not None:
         return cached
@@ -60,7 +60,7 @@ def save_circle_image(image_path, output):
 
 
 def get_output_path(image_path, output_type):
-    output_dir = Path().parent.parent.parent.parent / f"drawn_{output_type}"
+    output_dir = Path(__file__).parent.parent / f"drawn_{output_type}"
     output_dir.mkdir(exist_ok=True, parents=True)
     return (output_dir / image_path.name).absolute()
 
