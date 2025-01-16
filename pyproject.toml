@@ -1,18 +1,13 @@
 [project]
 name = "photoelasticity"
-version = "0.0.1"
-authors = [
-]
-description = "A package for analyzing photoelastic stress data"
+version = "0.1.0"
+description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.10"
-classifiers = [
-    "Programming Language :: Python :: 3",
-    "Operating System :: OS Independent",
+requires-python = ">=3.12"
+dependencies = [
+    "matplotlib>=3.10.0",
+    "numpy>=2.2.1",
+    "pytest>=8.3.4",
+    "scikit-image>=0.25.0",
+    "scipy>=1.15.1",
 ]
-license = "MIT"
-license-files = ["LICEN[CS]E*"]
-
-[project.urls]
-Homepage = "https://github.com/shoham-b/Photoelasticity"
-Issues = "https://github.com/shoham-b/Photoelasticity/issues"
