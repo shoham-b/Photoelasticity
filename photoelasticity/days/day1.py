@@ -1,9 +1,9 @@
 import numpy as np
 
-from photoelasticity.data import get_day_data
-from photoelasticity.fit_curve import find_fit_params
-from photoelasticity.image_detection import extract_circle_and_count_stripes
-from photoelasticity.matrix_tools import resize_matrix
+from photoelasticity.days.data import get_day_data
+from photoelasticity.fringes.fit_curve import find_fit_params
+from photoelasticity.image_detection.image_detection import extract_circle_and_count_stripes
+from photoelasticity.tools.matrix_tools import resize_matrix
 
 
 def do_day_1():
@@ -26,11 +26,11 @@ def do_day_1():
          for image_path in get_day_data(1, interesting_images_bundle)]
         for interesting_images_bundle in interesting_images
     ]
-    guess_I =    [20]*5
-    guess_A =    [5, 8,   12, 15, 20]
-    guess_offset=[-71,-15,-50,-50,-100]
-    images_num=len(guess_A)
-    guesses=[[guess_I[i], guess_A[i], guess_offset[i]] for i in range(images_num)]
+    guess_I = [20] * 5
+    guess_A = [5, 8, 12, 15, 20]
+    guess_offset = [-71, -15, -50, -50, -100]
+    images_num = len(guess_A)
+    guesses = [[guess_I[i], guess_A[i], guess_offset[i]] for i in range(images_num)]
     for i, data in enumerate(related_data):
         max_r = max(len(subdata) for subdata in data)
         resized_data = [resize_matrix(subdata, (max_r, max_r)) for subdata in data]

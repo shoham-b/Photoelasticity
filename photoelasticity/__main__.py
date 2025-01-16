@@ -1,5 +1,5 @@
-from photoelasticity.day1 import do_day_1
-from photoelasticity.day2 import do_day_2
+from photoelasticity.days.day1 import do_day_1
+from photoelasticity.days.day2 import do_day_2
 
 if __name__ == '__main__':
     # Usage

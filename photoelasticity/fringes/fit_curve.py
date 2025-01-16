@@ -1,11 +1,10 @@
 import numpy as np
 import scipy
-from PIL.ImageChops import offset
 from matplotlib import pyplot as plt
 from scipy.optimize import Bounds
 from scipy.signal import argrelmax
 
-from photoelasticity.matrix_tools import find_center_strip
+from photoelasticity.tools.matrix_tools import find_center_strip
 
 
 class FitError(Exception):
