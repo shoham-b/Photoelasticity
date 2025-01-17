@@ -74,8 +74,8 @@ def _filter_colliding_circles(circles):
 def _find_neighbour_circles_matrix(circles):
     circle_centers = circles[:, 0:2]
     circle_radii = circles[:, 2]
-    circle_centers_distance = circle_centers[:, np.newaxis,:] - circle_centers[np.newaxis, :,:]
-    dist_matrix = np.linalg.norm(circle_centers_distance,axis=-1)
+    circle_centers_distance = circle_centers[:, np.newaxis, :] - circle_centers[np.newaxis, :, :]
+    dist_matrix = np.linalg.norm(circle_centers_distance, axis=-1)
     radius_sum_matrix = circle_radii[:, np.newaxis] + circle_radii[np.newaxis, :]
     # Create a mask to filter out colliding circles
     collision_mask = dist_matrix < radius_sum_matrix * allowed_circle_collision
@@ -96,7 +96,7 @@ def _find_circles(image_path, max_rad_percent, min_rad_percent):
     image = cv2.imread(image_path)
     output = image.copy()
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    canny = cv2.Canny(gray, 20, 30)
+    canny = cv2.Canny(gray, 5, 5)
     imwrite(fr"../canny/{image_path.name}canny.jpg", canny)
     image_height, image_width = gray.shape
     max_fitting_radius = min(image_height, image_width) // 2
