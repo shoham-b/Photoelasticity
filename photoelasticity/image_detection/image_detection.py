@@ -13,7 +13,7 @@ class ImageError(Exception):
 cache = diskcache.Cache("../image_cache")
 
 allowed_circle_collision = 10
-prominent_circles_num = 20
+prominent_circles_num = 30
 rough_canny_params = 60, 70
 
 
@@ -49,7 +49,7 @@ def extract_multiple_circles_and_count_stripes(image_path: WindowsPath, min_rad_
     filtered_circles = _filter_colliding_circles(prominent_circles)
     neighbour_circles = _find_neighbour_circles_matrix(filtered_circles)
 
-    for (x, y, r) in circles:
+    for (x, y, r) in filtered_circles:
         _draw_circle(image_path, output, r, x, y)
 
     if should_cache:
@@ -96,7 +96,7 @@ def _find_circles(image_path, max_rad_percent, min_rad_percent):
     image = cv2.imread(image_path)
     output = image.copy()
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    canny = cv2.Canny(gray, 30, 30)
+    canny = cv2.Canny(gray, 20, 30)
     imwrite(fr"../canny/{image_path.name}canny.jpg", canny)
     image_height, image_width = gray.shape
     max_fitting_radius = min(image_height, image_width) // 2
@@ -107,6 +107,11 @@ def _find_circles(image_path, max_rad_percent, min_rad_percent):
                                2.1, min_radius,
                                param1=45, param2=55,
                                minRadius=min_radius, maxRadius=max_radius)
+    # circles = cv2.HoughCircles(gray,
+    #                            cv2.HOUGH_GRADIENT_ALT,
+    #                            3, min_radius,
+    #                            param1=0.4, param2=0 ,
+    #                            minRadius=min_radius, maxRadius=max_radius)
     # ensure at least some circles were found
     if circles is None:
         raise ImageError("No circles detected")
