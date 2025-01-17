@@ -12,7 +12,7 @@ class ImageError(Exception):
 
 cache = diskcache.Cache("../image_cache")
 
-allowed_circle_collision = 10
+allowed_circle_collision = 0.9
 prominent_circles_num = 30
 rough_canny_params = 60, 70
 
@@ -66,19 +66,19 @@ def _filter_colliding_circles(circles):
     collided_before = collision_mask & tril
     circles_mask = np.any(collided_before, axis=1)
 
-    filtered_circles = circles[circles_mask]
+    filtered_circles = circles[~circles_mask]
 
     return filtered_circles
 
 
 def _find_neighbour_circles_matrix(circles):
-    circle_centers = circles[:, 1:3]
-    circle_radii = circles[:, 0]
-    dist_matrix = np.sqrt(
-        np.sum((circle_centers[:, np.newaxis] - circle_centers[np.newaxis, :]) ** 2, axis=2))
+    circle_centers = circles[:, 0:2]
+    circle_radii = circles[:, 2]
+    circle_centers_distance = circle_centers[:, np.newaxis,:] - circle_centers[np.newaxis, :,:]
+    dist_matrix = np.linalg.norm(circle_centers_distance,axis=-1)
     radius_sum_matrix = circle_radii[:, np.newaxis] + circle_radii[np.newaxis, :]
     # Create a mask to filter out colliding circles
-    collision_mask = dist_matrix < radius_sum_matrix - allowed_circle_collision
+    collision_mask = dist_matrix < radius_sum_matrix * allowed_circle_collision
     np.fill_diagonal(collision_mask, False)  # Ignore self-collisions
     return collision_mask
 
