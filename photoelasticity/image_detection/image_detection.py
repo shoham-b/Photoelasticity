@@ -12,7 +12,7 @@ class ImageError(Exception):
 
 cache = diskcache.Cache("../image_cache")
 
-allowed_circle_collision = 0.8
+allowed_circle_collision = 0.7
 allowed_neigbhor_distance = 1.2
 prominent_circles_num = 40
 
@@ -36,7 +36,7 @@ def extract_circle_and_count_stripes(image_path: WindowsPath, min_rad_percent, m
 
 
 def extract_multiple_circles_and_count_stripes(image_path: WindowsPath, min_rad_percent, max_rad_percent,
-                                               should_cache=True, canny_threshold=17) -> np.array:
+                                               should_cache=True) -> np.array:
     if should_cache and ((cached := cache.get(image_path)) is not None):
         return cached
 
@@ -103,12 +103,14 @@ def _draw_circle(image_path, output, r, x, y):
     _save_circle_image(image_path, output)
 
 
-def _find_circles(image_path, max_rad_percent, min_rad_percent, canny_threshold=17):
+def _find_circles(image_path, max_rad_percent, min_rad_percent):
     # load the image, clone it for output, and then convert it to grayscale
     image = cv2.imread(image_path)
     output = image.copy()
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    canny = cv2.Canny(gray, 0.5 * canny_threshold, canny_threshold, 11)
+    canny_threshold_upper = np.percentile(gray, 50)
+    canny_threshold_lower = np.percentile(gray, 10)
+    canny = cv2.Canny(gray, canny_threshold_lower, canny_threshold_upper, 11)
     imwrite(fr"{__file__}/../../../canny/{image_path.name}.canny.jpg", canny)
     image_height, image_width = gray.shape
     max_fitting_radius = min(image_height, image_width) // 2
@@ -116,8 +118,8 @@ def _find_circles(image_path, max_rad_percent, min_rad_percent, canny_threshold=
     min_radius = int(max_fitting_radius * min_rad_percent)
     circles = cv2.HoughCircles(canny,
                                cv2.HOUGH_GRADIENT,
-                               1.5, min_radius,
-                               param1=25, param2=55,
+                               1.3 , min_radius,
+                               param1=10, param2=45,
                                minRadius=min_radius, maxRadius=max_radius)
     # ensure at least some circles were found
     if circles is None:

@@ -1,12 +1,11 @@
-import multiprocessing
-
 from photoelasticity.days.data import get_day_data
 from photoelasticity.image_detection.image_detection import extract_multiple_circles_and_count_stripes
+from photoelasticity.tools.multiprocessing import with_pool
 
 
 def do_day_4():
     day_data = get_day_data(4)
-    with multiprocessing.Pool() as pool:
+    with with_pool() as pool:
         pool.map(run_image_detection, day_data)
 
 
