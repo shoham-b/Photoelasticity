@@ -1,7 +1,7 @@
 import matlab.engine
 import numpy as np
 
-from photoelasticity.tools.matlab import start_malab
+from photoelasticity.tools.matlab import start_matlab
 
 pi = np.pi
 fsigma = matlab.double(6265)
@@ -13,6 +13,6 @@ z = 3
 
 
 def solve_disk(img_filename, forces0, beta, fsigma, rm, z):
-    with start_malab() as eng:
+    with start_matlab() as eng:
         (forces, alphas, img_final) = eng.customDiskSolver(forces0, beta, fsigma, rm, z, img_filename, nargout=3)
         img_final = np.array(img_final)
