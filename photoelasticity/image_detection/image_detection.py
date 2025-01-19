@@ -57,8 +57,7 @@ def extract_multiple_circles_and_count_stripes(image_path: WindowsPath, min_rad_
     for (x, y, r) in filtered_circles:
         _draw_circle(image_path, output, r, x, y)
 
-    if should_cache:
-        cache[image_path] = (circles_images, neighbour_circles_angle)
+    cache[image_path] = (circles_images, neighbour_circles_angle)
 
     return circles_images, neighbour_circles_angle
 

@@ -22,7 +22,7 @@ def run_box(data_path, should_cache):
 
 def run_column(data_path, should_cache):
     return extract_multiple_circles_and_count_stripes(
-        data_path, 0.355, 0.46,
+        data_path, 0.38, 0.48,
         should_cache=should_cache)
 
 
