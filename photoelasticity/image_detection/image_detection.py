@@ -13,6 +13,7 @@ class ImageError(Exception):
 cache = diskcache.Cache("../image_cache")
 
 allowed_circle_collision = 0.8
+allowed_neigbhor_distance = 1.2
 prominent_circles_num = 40
 
 
@@ -46,19 +47,30 @@ def extract_multiple_circles_and_count_stripes(image_path: WindowsPath, min_rad_
 
     prominent_circles = circles[:prominent_circles_num]
     filtered_circles = _filter_colliding_circles(prominent_circles)
-    neighbour_circles = _find_neighbour_circles_matrix(filtered_circles)
+
+    neighbour_circles = _find_neighbour_circles_matrix(filtered_circles, allowed_neigbhor_distance)
+    centers_angles = _find_circle_center_angles(filtered_circles)
+    neighbour_circles_angle = np.where(neighbour_circles, centers_angles, np.nan)
+
+    circles_images = [gray[y - r:y + r, x - r:x + r] for (x, y, r) in filtered_circles]
 
     for (x, y, r) in filtered_circles:
         _draw_circle(image_path, output, r, x, y)
-
     if should_cache:
         cache[image_path] = filtered_circles
 
-    return filtered_circles, neighbour_circles
+    return circles_images, neighbour_circles_angle
+
+
+def _find_circle_center_angles(circles):
+    circle_centers = circles[:, 0:2]
+    circle_centers_diff = circle_centers[:, np.newaxis, :] - circle_centers[np.newaxis, :, :]
+    circle_center_angle = np.arctan2(circle_centers_diff[:, :, 1], circle_centers_diff[:, :, 0])
+    return circle_center_angle
 
 
 def _filter_colliding_circles(circles):
-    collision_mask = _find_neighbour_circles_matrix(circles)
+    collision_mask = _find_neighbour_circles_matrix(circles, allowed_circle_collision)
     np.fill_diagonal(collision_mask, False)  # Ignore self-collisions
 
     tril = np.tril(collision_mask)
@@ -70,14 +82,14 @@ def _filter_colliding_circles(circles):
     return filtered_circles
 
 
-def _find_neighbour_circles_matrix(circles):
+def _find_neighbour_circles_matrix(circles, allowed_collision):
     circle_centers = circles[:, 0:2]
     circle_radii = circles[:, 2]
-    circle_centers_distance = circle_centers[:, np.newaxis, :] - circle_centers[np.newaxis, :, :]
-    dist_matrix = np.linalg.norm(circle_centers_distance, axis=-1)
+    circle_centers_diff = circle_centers[:, np.newaxis, :] - circle_centers[np.newaxis, :, :]
+    dist_matrix = np.linalg.norm(circle_centers_diff, axis=-1)
     radius_sum_matrix = circle_radii[:, np.newaxis] + circle_radii[np.newaxis, :]
     # Create a mask to filter out colliding circles
-    collision_mask = dist_matrix < radius_sum_matrix * allowed_circle_collision
+    collision_mask = dist_matrix < radius_sum_matrix * allowed_collision
     np.fill_diagonal(collision_mask, False)  # Ignore self-collisions
     return collision_mask
 
@@ -95,8 +107,8 @@ def _find_circles(image_path, max_rad_percent, min_rad_percent):
     image = cv2.imread(image_path)
     output = image.copy()
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    canny = cv2.Canny(gray, 6, 17, 7)
-    imwrite(fr"../canny/{image_path.name}canny.jpg", canny)
+    canny = cv2.Canny(gray, 7, 17, 9)
+    imwrite(fr"../canny/{image_path.name}.canny.jpg", canny)
     image_height, image_width = gray.shape
     max_fitting_radius = min(image_height, image_width) // 2
     max_radius = int(max_fitting_radius * max_rad_percent)
@@ -106,11 +118,6 @@ def _find_circles(image_path, max_rad_percent, min_rad_percent):
                                1.5, min_radius,
                                param1=25, param2=55,
                                minRadius=min_radius, maxRadius=max_radius)
-    # circles = cv2.HoughCircles(gray,
-    #                            cv2.HOUGH_GRADIENT_ALT,
-    #                            3, min_radius,
-    #                            param1=0.4, param2=0 ,
-    #                            minRadius=min_radius, maxRadius=max_radius)
     # ensure at least some circles were found
     if circles is None:
         raise ImageError("No circles detected")
