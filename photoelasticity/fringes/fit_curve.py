@@ -20,7 +20,7 @@ def make_assumed_function(radius):
     return assumed_function_without_offset
 
 
-def find_fit_params(data: np.array, image_title: str, guess=[50,10,0], data_amount_percent=1):
+def find_fit_params(data: np.array, image_title: str, guess=[50, 10, 0], data_amount_percent=1):
     radius = len(data) // 2
     center_strip = find_center_strip(data)
 
@@ -53,8 +53,8 @@ def find_fit_params(data: np.array, image_title: str, guess=[50,10,0], data_amou
                                               relative_indices,
                                               data_for_fit,
                                               p0=guess,
-                                              bounds=((5, 0, guess[2]-100),
-                                                (80, 100, guess[2]+100),),
+                                              bounds=((5, 0, guess[2] - 100),
+                                                      (80, 100, guess[2] + 100),),
                                               maxfev=5000)
     except ValueError:
         raise FitError()

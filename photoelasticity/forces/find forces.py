@@ -1,16 +1,15 @@
-import math
-import scipy
 import numpy as np
+import scipy
 
 
-#xxi = x-position at which the stress is computed (in meters)
-#xxj = y-position at which the stress is computed (in meters)
-#z = number of forces
-#f list of forces (magintude) acting on the particle
-#alpha list of angles of the forces, see diagram in J.Puckett, PhD-Thesis, North Carolina State University
-#beta list of agles of the forces, see diagram in J.Puckett, PhD-Thesis, North Carolina State University
-#fsigma photoelastic stress coefficient
-#rm radius of the disk (in meters)
+# xxi = x-position at which the stress is computed (in meters)
+# xxj = y-position at which the stress is computed (in meters)
+# z = number of forces
+# f list of forces (magintude) acting on the particle
+# alpha list of angles of the forces, see diagram in J.Puckett, PhD-Thesis, North Carolina State University
+# beta list of agles of the forces, see diagram in J.Puckett, PhD-Thesis, North Carolina State University
+# fsigma photoelastic stress coefficient
+# rm radius of the disk (in meters)
 def stress_engine(xxi, xxj, z, f, alpha, beta, fsigma, rm):
     # Computes the optical response of any given point in a loaded photoelastic disk
     # result = photoelastic response (intensity)
@@ -69,43 +68,45 @@ def stress_engine(xxi, xxj, z, f, alpha, beta, fsigma, rm):
         result = 0  # temporary fix is to set it zero then
     return result
 
-def err_from_fit(measured_brightness_arr,forces,alpha,beta,fsigma,radius_px,radius_m):
-    #inputs:
-    #the measured brightness of the disc, as a square array
-    #the force magnitudes (array), and the angles describing their position and direction (alpha, beta).
+
+def err_from_fit(measured_brightness_arr, forces, alpha, beta, fsigma, radius_px, radius_m):
+    # inputs:
+    # the measured brightness of the disc, as a square array
+    # the force magnitudes (array), and the angles describing their position and direction (alpha, beta).
     # (see Fig. 4.11 of James Puckett's PhD thesis)
-    #the fsigma constant (related to C and lambda), the radius of the disc in pixels, and in meters
-    z=forces.shape[0] #the num of forces
-    sq_sum=0.0
-    for i in range(radius_px*2): #loop over all points in
-        for j in range(radius_px-i,radius_px+i+1):
-            x=(-1+i/float(radius_px))*radius_m
-            y=(1-j/float(radius_px))*radius_m
-            calc_brightness=stress_engine(x,y,z,forces,alpha,beta,fsigma,radius_m)
-            sq_sum+=(measured_brightness_arr[i][j]-calc_brightness)**2
+    # the fsigma constant (related to C and lambda), the radius of the disc in pixels, and in meters
+    z = forces.shape[0]  # the num of forces
+    sq_sum = 0.0
+    for i in range(radius_px * 2):  # loop over all points in
+        for j in range(radius_px - i, radius_px + i + 1):
+            x = (-1 + i / float(radius_px)) * radius_m
+            y = (1 - j / float(radius_px)) * radius_m
+            calc_brightness = stress_engine(x, y, z, forces, alpha, beta, fsigma, radius_m)
+            sq_sum += (measured_brightness_arr[i][j] - calc_brightness) ** 2
     return sq_sum
 
-def find_forces(measured_brightness_arr,forces0,alpha0,beta,fsigma,radius_px,radius_m):
-    #note: radius_px is allowed to be a float. we can also take it as the size of measured_brightness_arr
 
-    z=forces0.shape[0]
+def find_forces(measured_brightness_arr, forces0, alpha0, beta, fsigma, radius_px, radius_m):
+    # note: radius_px is allowed to be a float. we can also take it as the size of measured_brightness_arr
 
-    def func(forces_and_alphas,z):
-        forces=forces_and_alphas[0:z]
-        alpha=forces_and_alphas[z+1:2*z]
-        return err_from_fit(measured_brightness_arr,forces,alpha,beta,fsigma,radius_px,radius_m)
+    z = forces0.shape[0]
 
-    max_force=1e5
-    minbounds=tuple([0.0]*(2*z))
-    maxbounds=[max_force]*z
-    maxbounds.append([2*np.pi]*z)
-    maxbounds=tuple(maxbounds)
+    def func(forces_and_alphas, z):
+        forces = forces_and_alphas[0:z]
+        alpha = forces_and_alphas[z + 1:2 * z]
+        return err_from_fit(measured_brightness_arr, forces, alpha, beta, fsigma, radius_px, radius_m)
 
-    result=scipy.optimize.minimize(func, np.concatenate(forces0,alpha0),args=(z),bounds=(minbounds,maxbounds))
+    max_force = 1e5
+    minbounds = tuple([0.0] * (2 * z))
+    maxbounds = [max_force] * z
+    maxbounds.append([2 * np.pi] * z)
+    maxbounds = tuple(maxbounds)
+
+    result = scipy.optimize.minimize(func, np.concatenate(forces0, alpha0), args=(z), bounds=(minbounds, maxbounds))
     ###** can add arguments for convergence here
 
-    forces_final=np.array(result.x[0:z])
-    alphas_final=np.array(result.x[z+1:2*z])
-    normal_forces=forces_final*np.cos(alphas_final)
-    tangent_forces=forces_final*np.sin(alphas_final)
+    forces_final = np.array(result.x[0:z])
+    alphas_final = np.array(result.x[z + 1:2 * z])
+    normal_forces = forces_final * np.cos(alphas_final)
+    tangent_forces = forces_final * np.sin(alphas_final)
     return [forces_final, normal_forces, tangent_forces]
