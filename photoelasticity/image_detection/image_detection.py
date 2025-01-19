@@ -12,9 +12,8 @@ class ImageError(Exception):
 
 cache = diskcache.Cache("../image_cache")
 
-allowed_circle_collision = 0.9
-prominent_circles_num = 30
-rough_canny_params = 60, 70
+allowed_circle_collision = 0.8
+prominent_circles_num = 40
 
 
 def extract_circle_and_count_stripes(image_path: WindowsPath, min_rad_percent, max_rad_percent) -> np.array:
@@ -96,7 +95,7 @@ def _find_circles(image_path, max_rad_percent, min_rad_percent):
     image = cv2.imread(image_path)
     output = image.copy()
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    canny = cv2.Canny(gray, 5, 5)
+    canny = cv2.Canny(gray, 6, 17, 7)
     imwrite(fr"../canny/{image_path.name}canny.jpg", canny)
     image_height, image_width = gray.shape
     max_fitting_radius = min(image_height, image_width) // 2
@@ -104,8 +103,8 @@ def _find_circles(image_path, max_rad_percent, min_rad_percent):
     min_radius = int(max_fitting_radius * min_rad_percent)
     circles = cv2.HoughCircles(canny,
                                cv2.HOUGH_GRADIENT,
-                               2.1, min_radius,
-                               param1=45, param2=55,
+                               1.5, min_radius,
+                               param1=25, param2=55,
                                minRadius=min_radius, maxRadius=max_radius)
     # circles = cv2.HoughCircles(gray,
     #                            cv2.HOUGH_GRADIENT_ALT,
