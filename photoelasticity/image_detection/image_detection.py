@@ -12,7 +12,7 @@ class ImageError(Exception):
 
 cache = diskcache.Cache("../image_cache")
 
-allowed_circle_collision = 0.7
+allowed_circle_collision = 0.85
 allowed_neigbhor_distance = 1.2
 prominent_circles_num = 40
 
@@ -108,8 +108,8 @@ def _find_circles(image_path, max_rad_percent, min_rad_percent):
     image = cv2.imread(image_path)
     output = image.copy()
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    canny_threshold_upper = np.percentile(gray, 50)
-    canny_threshold_lower = np.percentile(gray, 10)
+    canny_threshold_upper = np.percentile(gray, 50, method="weibull")
+    canny_threshold_lower = np.percentile(gray, 10, method="weibull")
     canny = cv2.Canny(gray, canny_threshold_lower, canny_threshold_upper, 11)
     imwrite(fr"{__file__}/../../../canny/{image_path.name}.canny.jpg", canny)
     image_height, image_width = gray.shape
@@ -118,7 +118,7 @@ def _find_circles(image_path, max_rad_percent, min_rad_percent):
     min_radius = int(max_fitting_radius * min_rad_percent)
     circles = cv2.HoughCircles(canny,
                                cv2.HOUGH_GRADIENT,
-                               1.3 , min_radius,
+                               1.3, min_radius,
                                param1=10, param2=45,
                                minRadius=min_radius, maxRadius=max_radius)
     # ensure at least some circles were found
