@@ -12,7 +12,7 @@ class ImageError(Exception):
 
 cache = diskcache.Cache("../image_cache")
 
-allowed_circle_collision = 0.85
+allowed_circle_collision = 0.88
 allowed_neigbhor_distance = 1.2
 prominent_circles_num = 40
 
@@ -36,11 +36,11 @@ def extract_circle_and_count_stripes(image_path: WindowsPath, min_rad_percent, m
 
 
 def extract_multiple_circles_and_count_stripes(image_path: WindowsPath, min_rad_percent, max_rad_percent,
-                                               should_cache=True) -> np.array:
-    if should_cache and ((cached := cache.get(image_path)) is not None):
+                                               use_cache, dp) -> np.array:
+    if use_cache and ((cached := cache.get(image_path)) is not None):
         return cached
 
-    circles, gray, output = _find_circles(image_path, max_rad_percent, min_rad_percent)
+    circles, gray, output = _find_circles(image_path, max_rad_percent, min_rad_percent, dp)
 
     # convert the (x, y) coordinates and radius of the circles to integers
     circles = np.round(circles[0, :]).astype("int")
@@ -102,7 +102,7 @@ def _draw_circle(image_path, output, r, x, y):
     _save_circle_image(image_path, output)
 
 
-def _find_circles(image_path, max_rad_percent, min_rad_percent):
+def _find_circles(image_path, max_rad_percent, min_rad_percent, dp):
     # load the image, clone it for output, and then convert it to grayscale
     image = cv2.imread(image_path)
     output = image.copy()
@@ -117,7 +117,7 @@ def _find_circles(image_path, max_rad_percent, min_rad_percent):
     min_radius = int(max_fitting_radius * min_rad_percent)
     circles = cv2.HoughCircles(canny,
                                cv2.HOUGH_GRADIENT,
-                               1.3, min_radius,
+                               dp, min_radius,
                                param1=10, param2=45,
                                minRadius=min_radius, maxRadius=max_radius)
     # ensure at least some circles were found
