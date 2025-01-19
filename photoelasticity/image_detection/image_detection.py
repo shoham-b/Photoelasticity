@@ -36,7 +36,7 @@ def extract_circle_and_count_stripes(image_path: WindowsPath, min_rad_percent, m
 
 
 def extract_multiple_circles_and_count_stripes(image_path: WindowsPath, min_rad_percent, max_rad_percent,
-                                               should_cache=True) -> np.array:
+                                               should_cache=True, canny_threshold=17) -> np.array:
     if should_cache and ((cached := cache.get(image_path)) is not None):
         return cached
 
@@ -56,8 +56,9 @@ def extract_multiple_circles_and_count_stripes(image_path: WindowsPath, min_rad_
 
     for (x, y, r) in filtered_circles:
         _draw_circle(image_path, output, r, x, y)
+
     if should_cache:
-        cache[image_path] = filtered_circles
+        cache[image_path] = (circles_images, neighbour_circles_angle)
 
     return circles_images, neighbour_circles_angle
 
@@ -102,13 +103,13 @@ def _draw_circle(image_path, output, r, x, y):
     _save_circle_image(image_path, output)
 
 
-def _find_circles(image_path, max_rad_percent, min_rad_percent):
+def _find_circles(image_path, max_rad_percent, min_rad_percent, canny_threshold=17):
     # load the image, clone it for output, and then convert it to grayscale
     image = cv2.imread(image_path)
     output = image.copy()
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    canny = cv2.Canny(gray, 7, 17, 9)
-    imwrite(fr"../canny/{image_path.name}.canny.jpg", canny)
+    canny = cv2.Canny(gray, 0.5 * canny_threshold, canny_threshold, 11)
+    imwrite(fr"{__file__}/../../../canny/{image_path.name}.canny.jpg", canny)
     image_height, image_width = gray.shape
     max_fitting_radius = min(image_height, image_width) // 2
     max_radius = int(max_fitting_radius * max_rad_percent)

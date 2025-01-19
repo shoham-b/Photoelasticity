@@ -185,6 +185,18 @@ wheels = [
 ]
 
 [[package]]
+name = "matlab"
+version = "0.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/d1/ea/1ecc1d9dfde594111b395dff9637183225dfb55b54fff4a906ba0ad5095a/matlab-0.1.tar.gz", hash = "sha256:8b13f7f121fcfb138203e35fa931e5f434abeefccfc583f8b3b4e2c0d0e7bcae", size = 538 }
+
+[[package]]
+name = "matlabengine"
+version = "24.2.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/bd/61/75deca61c20681ce4d747907fb3f70115f438df64dcc45ed515e8fc12420/matlabengine-24.2.2.tar.gz", hash = "sha256:0565932d9e067c609831e4d6e67dc8e06ac762116580f8ec9c52b78829c2ac29", size = 18893 }
+
+[[package]]
 name = "matplotlib"
 version = "3.10.0"
 source = { registry = "https://pypi.org/simple" }
@@ -300,6 +312,8 @@ version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "diskcache", marker = "python_full_version >= '3.12'" },
+    { name = "matlab", marker = "python_full_version >= '3.12'" },
+    { name = "matlabengine", marker = "python_full_version >= '3.12'" },
     { name = "matplotlib", marker = "python_full_version >= '3.12'" },
     { name = "numpy", marker = "python_full_version >= '3.12'" },
     { name = "opencv-python", marker = "python_full_version >= '3.12'" },
@@ -311,6 +325,8 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "diskcache", specifier = ">=5.6.3" },
+    { name = "matlab", specifier = ">=0.1" },
+    { name = "matlabengine", specifier = ">=24.2.2" },
     { name = "matplotlib", specifier = ">=3.10.0" },
     { name = "numpy", specifier = ">=2.2.1" },
     { name = "opencv-python", specifier = ">=4.11.0.86" },
