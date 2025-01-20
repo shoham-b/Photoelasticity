@@ -85,4 +85,5 @@ def plot_figure(A, data, image_title, relative_indices, fitted_data):
     plt.legend(loc='upper left')
     plt.xlabel("Distance from center [pixel]")
     plt.ylabel("Brightness percentage")
-    plt.show()
+
+    plt.savefig(fr"{__file__}/../../../graphs/{title.replace('.', ' ')}.png")
