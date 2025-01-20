@@ -19,3 +19,7 @@ def do_day_2():
     guesses = [[guess_I[i], guess_A[i], guess_offset[i]] for i in range(images_num)]
     for i, data in enumerate(related_data):
         find_fit_params(data, f"Circular polariscope with force {stresses[i]}N", guesses[i], 0.6)
+
+
+if __name__ == '__main__':
+    do_day_2()

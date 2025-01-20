@@ -36,3 +36,6 @@ def do_day_1():
         resized_data = [resize_matrix(subdata, (max_r, max_r)) for subdata in data]
         center_1D = np.mean(resized_data, axis=0)
         find_fit_params(center_1D, f"Plane polariscope with stress {stresses[i]}N", guesses[i])
+
+if __name__ == '__main__':
+    do_day_1()

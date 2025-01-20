@@ -21,7 +21,7 @@ def extract_circle_and_count_stripes(image_path: WindowsPath, min_rad_percent, m
     if (cached := cache.get(image_path)) is not None:
         return cached
 
-    circles, gray, output = _find_circles(image_path, max_rad_percent, min_rad_percent)
+    circles, gray, output = _find_circles(image_path, max_rad_percent, min_rad_percent, dp=1.4)
 
     # convert the (x, y) coordinates and radius of the circles to integers
     circles = np.round(circles[0, :]).astype("int")
