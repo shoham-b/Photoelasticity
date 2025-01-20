@@ -118,7 +118,7 @@ def _find_circles(image_path, max_rad_percent, min_rad_percent, dp):
     circles = cv2.HoughCircles(canny,
                                cv2.HOUGH_GRADIENT,
                                dp, min_radius,
-                               param1=10, param2=45,
+                               param1=canny_threshold_upper, param2=45,
                                minRadius=min_radius, maxRadius=max_radius)
     # ensure at least some circles were found
     if circles is None:
