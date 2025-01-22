@@ -49,33 +49,28 @@ def find_fit_params(data: np.array, image_title: str, guess=[50, 10, 0], data_am
     # except ValueError:
     #     raise FitError()
     try:
-        results, _ = scipy.optimize.curve_fit(assumed_function_without_offset,
-                                              relative_indices,
-                                              data_for_fit,
-                                              p0=guess,
-                                              bounds=((5, 0, guess[2] - 100),
-                                                      (80, 100, guess[2] + 100),),
-                                              maxfev=5000)
+        results, pcov = scipy.optimize.curve_fit(assumed_function_without_offset,
+                                                 relative_indices,
+                                                 data_for_fit,
+                                                 p0=guess,
+                                                 bounds=((5, 0, guess[2] - 100),
+                                                         (80, 100, guess[2] + 100),),
+                                                 maxfev=5000)
     except ValueError:
         raise FitError()
     I0, A, offset_f = results
     fitted_data = assumed_function_without_offset(relative_indices, *results)
+    errs = np.sqrt(np.diag(pcov))
 
-    print(f"""
-    fitted result is:
-        I0:{I0}
-        A:{A}
-        offset:{offset_f}
-        guess: {guess}
-""")
-    plot_figure(A, data_for_fit, image_title, relative_indices, fitted_data)
+    plot_figure(A, errs, data_for_fit, image_title, relative_indices, fitted_data)
 
 
 def get_maxima_count(data):
     return len(argrelmax(data, order=40)[0]) // 2
 
 
-def plot_figure(A, data, image_title, relative_indices, fitted_data):
+def plot_figure(A, errs, data, image_title, relative_indices, fitted_data):
+    I0_err, A_err, offset_f_err = errs
     data = data[:len(relative_indices)]
     title = f"Brightness of {image_title}"
     plt.figure(dpi=400)
@@ -83,7 +78,9 @@ def plot_figure(A, data, image_title, relative_indices, fitted_data):
     plt.plot(relative_indices, data, label="Measured data", linewidth=0.5)
     plt.plot(relative_indices, fitted_data, label=f"Fitted (A={A:.3f})", linewidth=0.5)
     plt.legend(loc='upper left')
-    plt.xlabel("Distance from center [pixel]")
+    plt.xlabel("Distance from center [pixel]", loc='right')
     plt.ylabel("Brightness percentage")
+
+    plt.figtext(0.01, 0.01, f"Fit error: A:{A_err:.3f}, I0:{I0_err:.3f}, offset:{offset_f_err:.3f}")
 
     plt.savefig(fr"{__file__}/../../../graphs/{title.replace('.', ' ')}.png")

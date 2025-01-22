@@ -50,11 +50,12 @@ def extract_multiple_circles_and_count_stripes(image_path: WindowsPath, min_rad_
 
     neighbour_circles = _find_neighbour_circles_matrix(filtered_circles, allowed_neigbhor_distance)
     centers_angles = _find_circle_center_angles(filtered_circles)
-    neighbour_circles_angle = np.where(neighbour_circles, centers_angles, np.nan)
 
-    circles_images = [gray[y - r:y + r, x - r:x + r] for (x, y, r) in filtered_circles]
+    sorted_circles = filtered_circles[np.lexsort((filtered_circles[:, 1], filtered_circles[:, 0]))]
+    circles_images = [gray[y - r:y + r, x - r:x + r] for (x, y, r) in sorted_circles]
+    neighbour_circles_angle = np.where(neighbour_circles, sorted_circles, np.nan)
 
-    for (x, y, r) in filtered_circles:
+    for (x, y, r) in sorted_circles:
         _draw_circle(image_path, output, r, x, y)
 
     cache[image_path] = (circles_images, neighbour_circles_angle)

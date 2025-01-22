@@ -15,8 +15,9 @@ def do_day_3():
 
 
 def run_box(data_path, use_cache, dp):
-    return extract_multiple_circles_and_count_stripes(data_path, 0.125, 0.34, use_cache=use_cache, dp=dp)
+    images, angles = extract_multiple_circles_and_count_stripes(data_path, 0.125, 0.34, use_cache=use_cache, dp=dp)
 
+    return
 
 def run_column(data_path, use_cache, dp):
     return extract_multiple_circles_and_count_stripes(data_path, 0.41, 0.45,

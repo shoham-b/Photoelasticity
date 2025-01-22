@@ -12,7 +12,7 @@ beta = matlab.double([0.6 * pi / 2, pi + 0.2 * pi / 2, 3 * pi / 2])
 z = 3
 
 
-def solve_disk(img_filename, forces0, beta, fsigma, rm, z):
+def solve_disk(img_filename, forces_guess, beta, fsigma, rm, z):
     with start_matlab() as eng:
-        (forces, alphas, img_final) = eng.customDiskSolver(forces0, beta, fsigma, rm, z, img_filename, nargout=3)
+        (forces, alphas, img_final) = eng.customDiskSolver(forces_guess, beta, fsigma, rm, z, img_filename, nargout=3)
         img_final = np.array(img_final)
