@@ -11,7 +11,7 @@ def do_day_4():
 
 def run_image_detection(data_path):
     return extract_multiple_circles_and_count_stripes(data_path, 0.15, 0.31,
-                                                      use_cache=True, dp=1.5)
+                                                      use_cache=False, dp=1.5)
 
 
 if __name__ == '__main__':

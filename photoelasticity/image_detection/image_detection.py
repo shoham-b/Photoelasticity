@@ -48,19 +48,39 @@ def extract_multiple_circles_and_count_stripes(image_path: WindowsPath, min_rad_
     prominent_circles = circles[:prominent_circles_num]
     filtered_circles = _filter_colliding_circles(prominent_circles)
 
-    neighbour_circles = _find_neighbour_circles_matrix(filtered_circles, allowed_neigbhor_distance)
     centers_angles = _find_circle_center_angles(filtered_circles)
 
-    sorted_circles = filtered_circles[np.lexsort((filtered_circles[:, 1], filtered_circles[:, 0]))]
-    circles_images = [gray[y - r:y + r, x - r:x + r] for (x, y, r) in sorted_circles]
-    neighbour_circles_angle = np.where(neighbour_circles, sorted_circles, np.nan)
+    neighbour_circles = _find_neighbour_circles_matrix(filtered_circles, allowed_neigbhor_distance)
+    neighbour_circles_angle = np.where(neighbour_circles, centers_angles, np.nan)
 
-    for (x, y, r) in sorted_circles:
+    circles_dir = Path(fr"{__file__}/../../../circles/{image_path.stem}")
+    circles_dir.mkdir(exist_ok=True, parents=True)
+    circles_images = []
+    for i, (x, y, r) in enumerate(filtered_circles):
+        image_copy = gray.copy()
+        circular_mask = create_circular_mask(image_copy.shape, (x, y), r)
+        image_copy[~circular_mask] = 0
+        xs,ys = np.where(image_copy)
+        left_boundary = np.min(xs)
+        right_boundary = np.max(xs)
+        top_boundary = np.min(ys)
+        bottom_boundary = np.max(ys)
+        cropped_center = image_copy[left_boundary:right_boundary, top_boundary:bottom_boundary]
+        circles_images.append(cropped_center)
+        cv2.imwrite(str(circles_dir / f"{i}.jpg"), cropped_center)
         _draw_circle(image_path, output, r, x, y)
 
     cache[image_path] = (circles_images, neighbour_circles_angle)
 
     return circles_images, neighbour_circles_angle
+
+
+def create_circular_mask(shape, center, radius):
+    h, w = shape
+    Y, X = np.ogrid[:h, :w]
+    dist_from_center = np.sqrt((X - center[0]) ** 2 + (Y - center[1]) ** 2)
+    mask = dist_from_center <= radius
+    return mask
 
 
 def _find_circle_center_angles(circles):
@@ -99,6 +119,7 @@ def _draw_circle(image_path, output, r, x, y):
     # draw the circle in the output image, then draw a rectangle
     # corresponding to the center of the circle
     cv2.circle(output, (x, y), r, (0, 255, 0), 4)
+
     # show the output image
     _save_circle_image(image_path, output)
 
