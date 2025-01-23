@@ -6,6 +6,9 @@ from scipy.signal import argrelmax
 
 from photoelasticity.tools.matrix_tools import find_center_strip
 
+TITLE_FONT_SIZE = 15
+AXIS_TEXT_FONT_SIZE = 13
+
 
 class FitError(Exception):
     pass
@@ -74,13 +77,13 @@ def plot_figure(A, errs, data, image_title, relative_indices, fitted_data):
     data = data[:len(relative_indices)]
     title = f"Brightness of {image_title}"
     plt.figure(dpi=400)
-    plt.suptitle(title, fontsize=10)
+    plt.suptitle(title, fontsize=TITLE_FONT_SIZE)
     plt.plot(relative_indices, data, label="Measured data", linewidth=0.5)
     plt.plot(relative_indices, fitted_data, label=f"Fitted (A={A:.3f})", linewidth=0.5)
     plt.legend(loc='upper left')
-    plt.xlabel("Distance from center [pixel]", loc='right')
-    plt.ylabel("Brightness percentage")
+    plt.xlabel("Distance from center [pixel]", fontsize=AXIS_TEXT_FONT_SIZE)
+    plt.ylabel("Brightness percentage", fontsize=AXIS_TEXT_FONT_SIZE)
 
-    plt.figtext(0.01, 0.01, f"Fit error: A:{A_err:.3f}, I0:{I0_err:.3f}, offset:{offset_f_err:.3f}")
+    # plt.figtext(0.01, 0.01, f"Fit error: A:{A_err:.3f}, I0:{I0_err:.3f}, offset:{offset_f_err:.3f}")
 
     plt.savefig(fr"{__file__}/../../../graphs/{title.replace('.', ' ')}.png")

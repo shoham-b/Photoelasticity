@@ -18,7 +18,7 @@ def do_day_3():
 def run_box(data_path, use_cache, dp):
     images, angles = extract_multiple_circles_and_count_stripes(data_path, 0.125, 0.34, use_cache=use_cache, dp=dp)
     for image in images:
-        solve_disk(images, angles, 0, 0, 0, 1)
+        solve_disk(image, angles, 0, 0, 0, 1)
     return
 
 

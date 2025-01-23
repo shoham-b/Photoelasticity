@@ -9,7 +9,7 @@ def do_day_2():
         f"DSC_{str(image_num).zfill(4)}.jpg"
         for image_num in related_data
     ]
-    force = [4.9, 9.8, 14.7, 19.6, 24.5, 29.4, 34.3]
+    force = [523, 663, 807, 922, 1045, 1152, 1221]
     related_data = [extract_circle_and_count_stripes(image_path, 0.425, 0.44)
                     for image_path in get_day_data(2, interesting_images)]
     guess_I = [50, 50, 40, 45, 40, 46, 50, 50]

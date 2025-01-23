@@ -37,42 +37,55 @@ def extract_circle_and_count_stripes(image_path: WindowsPath, min_rad_percent, m
 
 def extract_multiple_circles_and_count_stripes(image_path: WindowsPath, min_rad_percent, max_rad_percent,
                                                use_cache, dp) -> np.array:
-    if use_cache and ((cached := cache.get(image_path)) is not None):
-        return cached
+    # if use_cache and ((cached := cache.get(image_path)) is not None):
+    #     return cached
 
-    circles, gray, output = _find_circles(image_path, max_rad_percent, min_rad_percent, dp)
+    gray, output, circles = _find_prominent_circles(dp, image_path, max_rad_percent, min_rad_percent)
 
-    # convert the (x, y) coordinates and radius of the circles to integers
-    circles = np.round(circles[0, :]).astype("int")
+    centers_angles = _find_circle_center_angles(circles)
 
-    prominent_circles = circles[:prominent_circles_num]
-    filtered_circles = _filter_colliding_circles(prominent_circles)
-
-    centers_angles = _find_circle_center_angles(filtered_circles)
-
-    neighbour_circles = _find_neighbour_circles_matrix(filtered_circles, allowed_neigbhor_distance)
+    neighbour_circles = _find_neighbour_circles_matrix(circles, allowed_neigbhor_distance)
     neighbour_circles_angle = np.where(neighbour_circles, centers_angles, np.nan)
 
     circles_dir = Path(fr"{__file__}/../../../circles/{image_path.stem}")
     circles_dir.mkdir(exist_ok=True, parents=True)
     circles_images = []
-    for i, (x, y, r) in enumerate(filtered_circles):
-        image_copy = gray.copy()
-        circular_mask = create_circular_mask(image_copy.shape, (x, y), r)
-        image_copy[~circular_mask] = 0
-        xs,ys = np.where(image_copy)
-        left_boundary = np.min(xs)
-        right_boundary = np.max(xs)
-        top_boundary = np.min(ys)
-        bottom_boundary = np.max(ys)
-        cropped_center = image_copy[left_boundary:right_boundary, top_boundary:bottom_boundary]
+    for i, (x, y, r) in enumerate(circles):
+        cropped_center = _get_cropped_circle(gray, r, x, y)
         circles_images.append(cropped_center)
         cv2.imwrite(str(circles_dir / f"{i}.jpg"), cropped_center)
         _draw_circle(image_path, output, r, x, y)
 
-    cache[image_path] = (circles_images, neighbour_circles_angle)
+    _save_circle_image(image_path, output)
+    circle_radiuses = circles[::, 2]
 
-    return circles_images, neighbour_circles_angle
+    results = circles_images, circle_radiuses, neighbour_circles_angle
+    cache[image_path] = results
+    return results
+
+
+def _get_cropped_circle(gray, r, x, y):
+    image_copy = gray.copy()
+    circular_mask = create_circular_mask(image_copy.shape, (x, y), r)
+    image_copy[~circular_mask] = 0
+    xs, ys = np.where(image_copy)
+    left_boundary = np.min(xs)
+    right_boundary = np.max(xs)
+    top_boundary = np.min(ys)
+    bottom_boundary = np.max(ys)
+    cropped_center = image_copy[left_boundary:right_boundary, top_boundary:bottom_boundary]
+    return cropped_center
+
+
+def _find_prominent_circles(dp, image_path, max_rad_percent, min_rad_percent):
+    circles, gray, output = _find_circles(image_path, max_rad_percent, min_rad_percent, dp)
+    # convert the (x, y) coordinates and radius of the circles to integers
+    circles = np.round(circles[0, :]).astype("int")
+    prominent_circles = circles[:prominent_circles_num]
+    filtered_circles = _filter_colliding_circles(prominent_circles)
+    distances = np.sqrt(filtered_circles[:, 0] ** 2 + filtered_circles[:, 1] ** 2)
+    sorted_circles = filtered_circles[np.argsort(distances)]
+    return gray, output, sorted_circles
 
 
 def create_circular_mask(shape, center, radius):
@@ -119,9 +132,6 @@ def _draw_circle(image_path, output, r, x, y):
     # draw the circle in the output image, then draw a rectangle
     # corresponding to the center of the circle
     cv2.circle(output, (x, y), r, (0, 255, 0), 4)
-
-    # show the output image
-    _save_circle_image(image_path, output)
 
 
 def _find_circles(image_path, max_rad_percent, min_rad_percent, dp):
