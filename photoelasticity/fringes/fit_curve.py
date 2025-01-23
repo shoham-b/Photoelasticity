@@ -6,8 +6,8 @@ from scipy.signal import argrelmax
 
 from photoelasticity.tools.matrix_tools import find_center_strip
 
-TITLE_FONT_SIZE = 15
-AXIS_TEXT_FONT_SIZE = 13
+TITLE_FONT_SIZE = 17
+AXIS_TEXT_FONT_SIZE = 15
 
 
 class FitError(Exception):
