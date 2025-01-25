@@ -1,3 +1,5 @@
+import numpy as np
+
 from photoelasticity.days.data import get_day_data
 from photoelasticity.forces.disk_solve import solve_disk
 from photoelasticity.image_detection.image_detection import extract_multiple_circles_and_count_stripes
@@ -11,20 +13,26 @@ def do_day_3():
     dp = 2.3
 
     with with_pool() as pool:
-        pool.starmap(run_column, [(data_path, use_cache, dp) for data_path in column_data])
+        # pool.starmap(run_column, [(data_path, use_cache, dp) for data_path in column_data])
         pool.starmap(run_box, [(data_path, use_cache, dp) for data_path in box_data])
 
 
 def run_box(data_path, use_cache, dp):
-    images, angles = extract_multiple_circles_and_count_stripes(data_path, 0.125, 0.34, use_cache=use_cache, dp=dp)
-    for image in images:
-        solve_disk(image, angles, 0, 0, 0, 1)
+    circles_images, circle_radiuses, neighbour_circles_angle = extract_multiple_circles_and_count_stripes(data_path,
+                                                                                                          0.125, 0.34,
+                                                                                                          use_cache=use_cache,
+                                                                                                          dp=dp)
+    for i, image in enumerate(circles_images):
+        angles = neighbour_circles_angle[i]
+        angles = angles[~np.isnan(angles)]
+        if angles.any():
+            solve_disk(image, [150 / len(angles)] * len(angles), angles, 100.0, circle_radiuses[i])
     return
 
 
 def run_column(data_path, use_cache, dp):
-    images, angles = extract_multiple_circles_and_count_stripes(data_path, 0.41, 0.45,
-                                                                use_cache=use_cache, dp=dp)
+    images, radius, angles = extract_multiple_circles_and_count_stripes(data_path, 0.41, 0.45,
+                                                                        use_cache=use_cache, dp=dp)
 
 
 if __name__ == '__main__':
