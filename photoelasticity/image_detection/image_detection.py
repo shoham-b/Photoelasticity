@@ -47,14 +47,13 @@ def extract_multiple_circles_and_count_stripes(image_path: WindowsPath, min_rad_
     neighbour_circles = _find_neighbour_circles_matrix(circles, allowed_neigbhor_distance)
     neighbour_circles_angle = np.where(neighbour_circles, centers_angles, np.nan)
 
-    circles_dir = Path(fr"{__file__}/../../../circles/{image_path.stem}").resolve()
+    circles_dir = Path(fr"{__file__}/../../../circles/{image_path.stem}")
     circles_dir.mkdir(exist_ok=True, parents=True)
     circles_images = []
     for i, (x, y, r) in enumerate(circles):
         cropped_center = _get_cropped_circle(gray, r, x, y)
-        sub_image_path = str(circles_dir / f"{i}.jpg")
-        cv2.imwrite(sub_image_path, cropped_center)
-        circles_images.append(sub_image_path)
+        circles_images.append(cropped_center)
+        cv2.imwrite(str(circles_dir / f"{i}.jpg"), cropped_center)
         _draw_circle(image_path, output, r, x, y)
 
     _save_circle_image(image_path, output)

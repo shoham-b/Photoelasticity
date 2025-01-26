@@ -26,7 +26,7 @@ def run_box(data_path, use_cache, dp):
         angles = neighbour_circles_angle[i]
         angles = angles[~np.isnan(angles)]
         if angles.any():
-            solve_disk(image, [150 / len(angles)] * len(angles), angles, 100.0, circle_radiuses[i])
+            solve_disk(image, [150 / len(angles)] * len(angles), angles, 10.0, circle_radiuses[i])
     return
 
 

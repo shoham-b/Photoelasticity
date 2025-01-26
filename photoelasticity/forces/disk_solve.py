@@ -20,9 +20,13 @@ def solve_disk(image_path, forces_guess, angles, fsigma, radius):
     with start_matlab() as eng:
         matlabed_forces_guess = matlab.double(forces_guess)
         matlabed_angles = matlab.double(angles.tolist())
-        radius_float = float(radius)
-        fsigma_float = float(fsigma)
-        (forces, alphas, img_final) = eng.customDiskSolver(matlabed_forces_guess, matlabed_angles, fsigma_float,
-                                                           radius_float, z,
-                                                           image_path, nargout=3)
+        matlabed_radius = matlab.double(float(radius))
+        matlabed_fsigma = matlab.double(float(fsigma))
+        try:
+            (forces, alphas, img_final) = eng.customDiskSolver(matlabed_forces_guess,
+                                                               matlabed_angles, matlabed_fsigma,
+                                                               matlabed_radius, z,
+                                                               image_path, nargout=3)
+        except matlab.engine.MatlabExecutionError:
+            return
     img_final = np.array(img_final)
