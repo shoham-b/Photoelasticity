@@ -132,7 +132,7 @@ def _find_neighbour_circles_matrix(circles, allowed_collision):
 def _draw_circle(image_path, output, r, x, y):
     # draw the circle in the output image, then draw a rectangle
     # corresponding to the center of the circle
-    cv2.circle(output, (x, y), r, (0, 255, 0), 4)
+    cv2.circle(output, (x, y), r, (255,0 , 0), 4)
 
 
 def _find_circles(image_path, max_rad_percent, min_rad_percent, dp):

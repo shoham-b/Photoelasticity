@@ -1,7 +1,5 @@
-import numpy as np
-
 from photoelasticity.days.data import get_day_data
-from photoelasticity.forces.disk_solve import solve_disk
+from photoelasticity.forces.disk_solve import solve_multiple_disks
 from photoelasticity.image_detection.image_detection import extract_multiple_circles_and_count_stripes
 from photoelasticity.tools.multiprocessing import with_pool
 
@@ -18,15 +16,11 @@ def do_day_3():
 
 
 def run_box(data_path, use_cache, dp):
-    circles_images, circle_radiuses, neighbour_circles_angle = extract_multiple_circles_and_count_stripes(data_path,
-                                                                                                          0.125, 0.34,
-                                                                                                          use_cache=use_cache,
-                                                                                                          dp=dp)
-    for i, image in enumerate(circles_images):
-        angles = neighbour_circles_angle[i]
-        angles = angles[~np.isnan(angles)]
-        if angles.any():
-            solve_disk(image, [150 / len(angles)] * len(angles), angles, 10.0, circle_radiuses[i])
+    images, radius, angles = extract_multiple_circles_and_count_stripes(data_path,
+                                                                        0.125, 0.34,
+                                                                        use_cache=use_cache,
+                                                                        dp=dp)
+    solve_multiple_disks(images, radius, angles)
     return
 
 
@@ -34,6 +28,7 @@ def run_column(data_path, use_cache, dp):
     images, radius, angles = extract_multiple_circles_and_count_stripes(data_path, 0.41, 0.45,
                                                                         use_cache=use_cache, dp=dp)
 
+    solve_multiple_disks(images, radius, angles)
 
 if __name__ == '__main__':
     do_day_3()
