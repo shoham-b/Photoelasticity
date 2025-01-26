@@ -66,6 +66,6 @@ def draw_graphs(forces, title=""):
     plt.ylabel('Cumulative distribution function')
     plt.title(title)
     plt.text(3.5, 0.1, "σ²=" + str(round(variance, 2)), fontsize=15)  # +"\n"+"δ="+str(round(delta,2)))
-    main_image_dir = Path("../../../forces_graphs").resolve()
+    main_image_dir = Path(rf"{__file__}/../../../forces_graphs").resolve()
     main_image_dir.mkdir(parents=True, exist_ok=True)
     plt.savefig(str(main_image_dir / f"{title}.png"))

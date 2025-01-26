@@ -37,8 +37,8 @@ def extract_circle_and_count_stripes(image_path: WindowsPath, min_rad_percent, m
 
 def extract_multiple_circles_and_count_stripes(image_path: WindowsPath, min_rad_percent, max_rad_percent,
                                                use_cache, dp) -> np.array:
-    # if use_cache and ((cached := cache.get(image_path)) is not None):
-    #     return cached
+    if use_cache and ((cached := cache.get(image_path)) is not None):
+        return cached
 
     gray, output, circles = _find_prominent_circles(dp, image_path, max_rad_percent, min_rad_percent)
 
