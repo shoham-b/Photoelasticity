@@ -43,7 +43,7 @@ def solve_disk(image_path, forces_guess, angles, radius):
 
 
 def solve_multiple_disks(circles_image_paths, circle_radiuses, neighbour_circles_angle):
-    for i, image_path in enumerate(circles_image_paths):
+    for i, image_path in enumerate(set(circles_image_paths)):
         image_path = Path(image_path)
         angles = neighbour_circles_angle[i]
         angles = (angles[~np.isnan(angles)] + np.pi) % (2 * np.pi)
@@ -60,4 +60,4 @@ def solve_multiple_disks(circles_image_paths, circle_radiuses, neighbour_circles
             Forces: {forces}
             Alphas: {alphas}
             """)
-            draw_graphs(forces, f"Forces map for {image_path.stem} of {full_image_path.name}")
+            draw_graphs(forces, f"Forces map for {i} of {full_image_path.name}")

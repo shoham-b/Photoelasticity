@@ -13,7 +13,7 @@ class ImageError(Exception):
 cache = diskcache.Cache("../image_cache")
 
 allowed_circle_collision = 0.88
-allowed_neigbhor_distance = 1.1
+allowed_neigbhor_distance = 1.3
 prominent_circles_num = 40
 
 
@@ -37,30 +37,35 @@ def extract_circle_and_count_stripes(image_path: WindowsPath, min_rad_percent, m
 
 def extract_multiple_circles_and_count_stripes(image_path: WindowsPath, min_rad_percent, max_rad_percent,
                                                use_cache, dp) -> np.array:
-    if use_cache and ((cached := cache.get(image_path)) is not None):
-        return cached
+    # if use_cache and ((cached := cache.get(image_path)) is not None):
+    #     return cached
 
-    gray, output, circles = _find_prominent_circles(dp, image_path, max_rad_percent, min_rad_percent)
+    gray, output, photoelastic_circles = _find_prominent_circles(dp, image_path, max_rad_percent, min_rad_percent)
 
-    centers_angles = _find_circle_center_angles(circles)
-
-    neighbour_circles = _find_neighbour_circles_matrix(circles, allowed_neigbhor_distance)
-    neighbour_circles_angle = np.where(neighbour_circles, centers_angles, np.nan)
+    small_blue_circles = _find_small_blue_circles(image_path)
+    all_circles = np.vstack(
+        [photoelastic_circles, small_blue_circles]) if small_blue_circles is not None else photoelastic_circles
+    neighbour_circles = _find_neighbour_circles_matrix(all_circles, allowed_neigbhor_distance)
+    neighbour_circles_angle = _find_circle_center_angles(all_circles)
+    angles_per_photoelastic_circle = neighbour_circles_angle[:len(photoelastic_circles), :]
+    angles_per_photoelastic_circle = angles_per_photoelastic_circle[~np.isnan(angles_per_photoelastic_circle)]
 
     circles_dir = Path(fr"{__file__}/../../../circles/{image_path.stem}").resolve()
     circles_dir.mkdir(exist_ok=True, parents=True)
     circles_images = []
-    for i, (x, y, r) in enumerate(circles):
+    for i, (x, y, r) in enumerate(photoelastic_circles):
         cropped_center = _get_cropped_circle(gray, r, x, y)
         cropped_center_path = str(circles_dir / f"{i}.jpg")
         cv2.imwrite(cropped_center_path, cropped_center)
         circles_images.append(cropped_center_path)
-        _draw_circle(output, r, x, y)
-    _connect_neighbohr_circle_centers(circles, neighbour_circles, output)
-    _save_circle_image(image_path, output)
-    circle_radiuses = circles[::, 2]
 
-    results = circles_images, circle_radiuses, neighbour_circles_angle
+    for (x, y, r) in all_circles:
+        _draw_circle(output, r, x, y)
+    _connect_neighbohr_circle_centers(all_circles, neighbour_circles, output)
+    _save_circle_image(image_path, output)
+    circle_radiuses = photoelastic_circles[::, 2]
+
+    results = circles_images, circle_radiuses, angles_per_photoelastic_circle
     cache[image_path] = results
     return results
 
@@ -126,13 +131,14 @@ def _find_neighbour_circles_matrix(circles, allowed_collision):
     # Create a mask to filter out colliding circles
     collision_mask = dist_matrix < radius_sum_matrix * allowed_collision
     np.fill_diagonal(collision_mask, False)  # Ignore self-collisions
+
     return collision_mask
 
 
 def _draw_circle(output, r, x, y):
     # draw the circle in the output image, then draw a rectangle
     # corresponding to the center of the circle
-    cv2.circle(output, (x, y), r, (255, 0, 0), 4)
+    cv2.circle(output, (x, y), r, (240, 155, 90), 4)
 
 
 def _connect_neighbohr_circle_centers(circles, neighbour_circles, output):
@@ -164,6 +170,34 @@ def _find_circles(image_path, max_rad_percent, min_rad_percent, dp):
     if circles is None:
         raise ImageError("No circles detected")
     return circles, gray, output
+
+
+def _find_small_blue_circles(image_path, dp=1):
+    image = cv2.imread(image_path)
+    lower_blue = np.array([100, 150, 0])
+    upper_blue = np.array([140, 255, 255])
+    hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+    blue_mask = cv2.inRange(hsv, lower_blue, upper_blue)
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    gray = np.where(blue_mask, gray, 0)
+
+    blue_dir = Path(fr"{__file__}/../../../blue").resolve()
+    blue_dir.mkdir(exist_ok=True, parents=True)
+    cv2.imwrite(str(blue_dir / image_path.name), gray)
+
+    image_height, image_width = gray.shape
+    max_fitting_radius = min(image_height, image_width) // 2
+    max_radius = int(max_fitting_radius * 0.1)
+    min_radius = int(max_fitting_radius * 0.01)
+    circles = cv2.HoughCircles(gray,
+                               cv2.HOUGH_GRADIENT,
+                               dp, min_radius,
+                               param2=15,
+                               minRadius=min_radius, maxRadius=max_radius)
+    filtered_circles = _filter_colliding_circles(circles.astype(int)[0])
+    if filtered_circles is None:
+        return None
+    return filtered_circles
 
 
 def _save_circle_image(image_path, output):
