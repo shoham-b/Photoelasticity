@@ -13,7 +13,7 @@ def do_day_3():
     dp = 2.3
 
     with with_pool() as pool:
-        # pool.starmap(run_column, [(data_path, use_cache, dp) for data_path in column_data])
+        pool.starmap(run_column, [(data_path, use_cache, dp) for data_path in column_data])
         pool.starmap(run_box, [(data_path, use_cache, dp) for data_path in box_data])
 
 
