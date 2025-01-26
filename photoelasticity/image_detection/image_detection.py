@@ -13,7 +13,7 @@ class ImageError(Exception):
 cache = diskcache.Cache("../image_cache")
 
 allowed_circle_collision = 0.88
-allowed_neigbhor_distance = 1.2
+allowed_neigbhor_distance = 1.1
 prominent_circles_num = 40
 
 
@@ -27,7 +27,7 @@ def extract_circle_and_count_stripes(image_path: WindowsPath, min_rad_percent, m
     circles = np.round(circles[0, :]).astype("int")
     (x, y, r) = circles[0]  # Get the first circle in the list
 
-    _draw_circle(image_path, output, r, x, y)
+    _draw_circle(output, r, x, y)
 
     result = gray[y - r:y + r, x - r:x + r]
 
@@ -55,8 +55,8 @@ def extract_multiple_circles_and_count_stripes(image_path: WindowsPath, min_rad_
         cropped_center_path = str(circles_dir / f"{i}.jpg")
         cv2.imwrite(cropped_center_path, cropped_center)
         circles_images.append(cropped_center_path)
-        _draw_circle(image_path, output, r, x, y)
-
+        _draw_circle(output, r, x, y)
+    _connect_neighbohr_circle_centers(circles, neighbour_circles, output)
     _save_circle_image(image_path, output)
     circle_radiuses = circles[::, 2]
 
@@ -129,10 +129,17 @@ def _find_neighbour_circles_matrix(circles, allowed_collision):
     return collision_mask
 
 
-def _draw_circle(image_path, output, r, x, y):
+def _draw_circle(output, r, x, y):
     # draw the circle in the output image, then draw a rectangle
     # corresponding to the center of the circle
-    cv2.circle(output, (x, y), r, (255,0 , 0), 4)
+    cv2.circle(output, (x, y), r, (255, 0, 0), 4)
+
+
+def _connect_neighbohr_circle_centers(circles, neighbour_circles, output):
+    for i, (x, y, r) in enumerate(circles):
+        for j, (x2, y2, r2) in enumerate(circles):
+            if neighbour_circles[i, j]:
+                cv2.line(output, (x, y), (x2, y2), (0, 0, 255), 2)
 
 
 def _find_circles(image_path, max_rad_percent, min_rad_percent, dp):
