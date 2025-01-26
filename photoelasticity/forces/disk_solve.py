@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 
 import cv2
@@ -28,10 +29,14 @@ def solve_disk(image_path, forces_guess, angles, fsigma, radius):
         matlabed_fsigma = matlab.double(float(fsigma))
 
         matlabed_path = str(image_path)
-        (forces, alphas, img_final) = eng.customDiskSolver(matlabed_forces_guess,
+        try:
+            (forces, alphas, img_final) = eng.customDiskSolver(matlabed_forces_guess,
                                                            matlabed_angles, matlabed_fsigma,
                                                            matlabed_radius, z,
                                                            matlabed_path, nargout=3)
+        except matlab.engine.MatlabExecutionError:
+            logging.warn(f"Matlab failed to solve disk for {image_path}")
+            return
     img_final = np.array(img_final)
     return forces, alphas, img_final
 

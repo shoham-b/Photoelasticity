@@ -1,4 +1,6 @@
 # see Eq.(21)--(26) of : 10.1103/PhysRevE.98.012905
+import logging
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -45,6 +47,7 @@ def predicted_CDF(x, lambda_a, lambda_b):
 def draw_graphs(forces, title=""):
     forces = forces / np.average(forces)  # make the forces unitless
     if np.var(forces) == 0:
+        logging.warn(f"Variance of forces is 0, skipping drawing graphs for {title}")
         return
     z = forces.shape[0]
     (lambda_a, lambda_b, variance) = find_force_dist_coeffs(forces)
@@ -63,4 +66,6 @@ def draw_graphs(forces, title=""):
     plt.ylabel('Cumulative distribution function')
     plt.title(title)
     plt.text(3.5, 0.1, "σ²=" + str(round(variance, 2)), fontsize=15)  # +"\n"+"δ="+str(round(delta,2)))
-    plt.savefig(f"../../../forces_graphs/{title}.png")
+    main_image_dir = Path("../../../forces_graphs").resolve()
+    main_image_dir.mkdir(parents=True, exist_ok=True)
+    plt.savefig(str(main_image_dir / f"{title}.png"))
