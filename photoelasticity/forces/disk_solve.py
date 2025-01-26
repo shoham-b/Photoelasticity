@@ -1,8 +1,8 @@
 from pathlib import Path
 
+import cv2
 import matlab.engine
 import numpy as np
-from imageio.v2 import imwrite
 
 from photoelasticity.tools.matlab import start_matlab
 
@@ -16,7 +16,7 @@ from photoelasticity.tools.matlab import start_matlab
 # z = 3
 
 
-def solve_disk(image_path, forces_guess, angles, fsigma, radius ):
+def solve_disk(image_path, forces_guess, angles, fsigma, radius):
     z = len(angles)
     if z == 0:
         return
@@ -37,9 +37,10 @@ def solve_disk(image_path, forces_guess, angles, fsigma, radius ):
 def solve_multiple_disks(circles_image_paths, circle_radiuses, neighbour_circles_angle):
     for i, image_path in enumerate(circles_image_paths):
         angles = neighbour_circles_angle[i]
-        angles = angles[~np.isnan(angles)] + np.pi
+        angles = angles[~np.isnan(angles)] % (2 * np.pi)
         if angles.any():
-            (forces, alphas, img_final) = solve_disk(image_path, [150 / len(angles)] * len(angles), angles, 10.0,
+            (forces, alphas, img_final) = solve_disk(image_path, [150 / len(angles)] * len(angles), angles, 100.0,
                                                      circle_radiuses[i])
-            finals_dir = Path(fr"{__file__}/../../../finals/{image_path.stem}").resolve()
-            imwrite(str(finals_dir / f"{i}.jpg"), img_final)
+            finals_dir = Path(fr"{__file__}/../../../finals/{Path(image_path).parent.name}").resolve()
+            finals_dir.mkdir(exist_ok=True, parents=True)
+            cv2.imwrite(str(finals_dir / f"{i}.jpg"), img_final)

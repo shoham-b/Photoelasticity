@@ -28,7 +28,7 @@ def run_column(data_path, use_cache, dp):
     images, radius, angles = extract_multiple_circles_and_count_stripes(data_path, 0.41, 0.45,
                                                                         use_cache=use_cache, dp=dp)
 
-    solve_multiple_disks(images, radius, angles)
+    # solve_multiple_disks(images, radius, angles)
 
 if __name__ == '__main__':
     do_day_3()
