@@ -34,7 +34,7 @@ def extract_circle_and_count_stripes(image_path: WindowsPath, min_rad_percent, m
 
 
 def extract_multiple_circles_and_count_stripes(image_path: WindowsPath, min_rad_percent, max_rad_percent,
-                                               use_cache, dp) -> np.array:
+                                               use_cache, dp, ignore_images={}) -> np.array:
     if use_cache and ((cached := cache.get(image_path)) is not None):
         return cached
 
@@ -45,6 +45,7 @@ def extract_multiple_circles_and_count_stripes(image_path: WindowsPath, min_rad_
         [photoelastic_circles, small_blue_circles]) if small_blue_circles is not None else photoelastic_circles
     neighbour_circles = _find_neighbour_circles_matrix(all_circles)
     neighbour_circles_angle = _find_circle_center_angles(all_circles)
+    neighbour_circles_angle[:, ignore_images] = np.nan
     angle_or_none = np.where(neighbour_circles, neighbour_circles_angle, np.nan) + np.pi
 
     angles_per_photoelastic_circle = [[angle for angle in neigh if not np.isnan(angle)] for neigh in
