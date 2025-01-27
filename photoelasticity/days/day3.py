@@ -18,7 +18,7 @@ def regenerate_day3_cache():
     day_data = get_day_data(3)
     column_data, box_data = day_data[:9], day_data[9:]
 
-    dp = 2.5
+    dp = 3
     with with_pool() as pool:
         # pool.starmap(extract_multiple_circles_and_count_stripes,
         #              [(data_path, 0.43, 0.5, False, dp) for data_path in column_data])

@@ -1,3 +1,4 @@
+import logging
 from pathlib import WindowsPath, Path
 
 import cv2
@@ -35,6 +36,7 @@ def extract_circle_and_count_stripes(image_path: WindowsPath, min_rad_percent, m
 
 def extract_multiple_circles_and_count_stripes(image_path: WindowsPath, min_rad_percent, max_rad_percent,
                                                use_cache, dp, ignore_disks=set()) -> np.array:
+    logging.info(f"Extracting circles from {image_path}")
     if use_cache and ((cached := cache.get(image_path)) is not None):
         return cached
 
