@@ -9,7 +9,7 @@ from photoelasticity.tools.multiprocessing import with_pool
 def do_day_3():
     day_data = get_day_data(3)
     column_data, box_data = day_data[:9], day_data[9:]
-    use_cache = False
+    use_cache = True
     dp = 2.3
     with with_pool() as pool:
         pool.starmap(run_column, [(data_path, use_cache, dp) for data_path in column_data])

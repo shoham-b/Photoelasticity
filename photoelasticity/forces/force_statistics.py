@@ -50,6 +50,7 @@ def draw_graphs(forces, title):
     if np.var(normalized_forces) == 0:
         logging.warning(f"Variance of forces is 0, skipping drawing graphs for {title}")
         return
+    plt.figure()
     z = normalized_forces.shape[0]
     (lambda_a, lambda_b, variance) = find_force_dist_coeffs(normalized_forces)
 
@@ -69,4 +70,6 @@ def draw_graphs(forces, title):
     plt.text(3.5, 0.1, "σ²=" + str(round(variance, 2)), fontsize=15)  # +"\n"+"δ="+str(round(delta,2)))
     main_image_dir = Path(rf"{__file__}/../../../forces_graphs").resolve()
     main_image_dir.mkdir(parents=True, exist_ok=True)
-    plt.savefig(str(main_image_dir / f"{title}.png"))
+    graph_path = main_image_dir / f"{title}.png"
+    plt.savefig(str(graph_path))
+    plt.close()
