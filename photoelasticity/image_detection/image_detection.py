@@ -5,6 +5,9 @@ import diskcache
 import numpy as np
 from imageio.v2 import imwrite
 
+CONNECT_CIRCLES_COLOR = (240, 184, 43)
+FOUND_CIRCLES_COLOR = (240, 155, 90)
+
 
 class ImageError(Exception):
     pass
@@ -13,14 +16,12 @@ class ImageError(Exception):
 cache = diskcache.Cache("../image_cache")
 
 allowed_circle_collision = 0.88
-allowed_neigbhor_distance = 1.3
+allowed_neigbhor_distance = 1.03
 prominent_circles_num = 40
 
 
+@cache.memoize()
 def extract_circle_and_count_stripes(image_path: WindowsPath, min_rad_percent, max_rad_percent) -> np.array:
-    if (cached := cache.get(image_path)) is not None:
-        return cached
-
     circles, gray, output = _find_circles(image_path, max_rad_percent, min_rad_percent, dp=1.4)
 
     # convert the (x, y) coordinates and radius of the circles to integers
@@ -29,10 +30,7 @@ def extract_circle_and_count_stripes(image_path: WindowsPath, min_rad_percent, m
 
     _draw_circle(output, r, x, y)
 
-    result = gray[y - r:y + r, x - r:x + r]
-
-    cache[image_path] = result
-    return result
+    return gray[y - r:y + r, x - r:x + r]
 
 
 def extract_multiple_circles_and_count_stripes(image_path: WindowsPath, min_rad_percent, max_rad_percent,
@@ -41,13 +39,14 @@ def extract_multiple_circles_and_count_stripes(image_path: WindowsPath, min_rad_
         return cached
 
     gray, output, photoelastic_circles = _find_prominent_circles(dp, image_path, max_rad_percent, min_rad_percent)
-
+    _write_all_circles_numbers(output, photoelastic_circles)
     small_blue_circles = _find_small_blue_circles(image_path)
     all_circles = np.vstack(
         [photoelastic_circles, small_blue_circles]) if small_blue_circles is not None else photoelastic_circles
-    neighbour_circles = _find_neighbour_circles_matrix(all_circles, allowed_neigbhor_distance)
+    neighbour_circles = _find_neighbour_circles_matrix(all_circles)
     neighbour_circles_angle = _find_circle_center_angles(all_circles)
-    angle_or_none = np.where(neighbour_circles, neighbour_circles_angle, np.nan)
+    angle_or_none = np.where(neighbour_circles, neighbour_circles_angle, np.nan) + np.pi
+
     angles_per_photoelastic_circle = [[angle for angle in neigh if not np.isnan(angle)] for neigh in
                                       angle_or_none[:len(photoelastic_circles)]]
 
@@ -105,13 +104,13 @@ def create_circular_mask(shape, center, radius):
 
 def _find_circle_center_angles(circles):
     circle_centers = circles[:, 0:2]
-    circle_centers_diff = circle_centers[:, np.newaxis, :] - circle_centers[np.newaxis, :, :]
+    circle_centers_diff = circle_centers[:, np.newaxis] - circle_centers[np.newaxis, :]
     circle_center_angle = np.arctan2(circle_centers_diff[:, :, 1], circle_centers_diff[:, :, 0])
     return circle_center_angle
 
 
 def _filter_colliding_circles(circles):
-    collision_mask = _find_neighbour_circles_matrix(circles, allowed_circle_collision)
+    collision_mask = _find_collision_circles_matrix(circles, )
     np.fill_diagonal(collision_mask, False)  # Ignore self-collisions
 
     tril = np.tril(collision_mask)
@@ -123,30 +122,53 @@ def _filter_colliding_circles(circles):
     return filtered_circles
 
 
-def _find_neighbour_circles_matrix(circles, allowed_collision):
-    circle_centers = circles[:, 0:2]
-    circle_radii = circles[:, 2]
-    circle_centers_diff = circle_centers[:, np.newaxis, :] - circle_centers[np.newaxis, :, :]
-    dist_matrix = np.linalg.norm(circle_centers_diff, axis=-1)
-    radius_sum_matrix = circle_radii[:, np.newaxis] + circle_radii[np.newaxis, :]
+def _find_neighbour_circles_matrix(circles):
+    dist_matrix, radius_sum_matrix = _get_dist_and_rad_sum(circles)
     # Create a mask to filter out colliding circles
-    collision_mask = dist_matrix < radius_sum_matrix * allowed_collision
+    collision_mask = dist_matrix < np.clip(radius_sum_matrix * allowed_neigbhor_distance, radius_sum_matrix + 20, None)
     np.fill_diagonal(collision_mask, False)  # Ignore self-collisions
 
     return collision_mask
 
 
+def _find_collision_circles_matrix(circles):
+    dist_matrix, radius_sum_matrix = _get_dist_and_rad_sum(circles)
+    # Create a mask to filter out colliding circles
+    collision_mask = dist_matrix < radius_sum_matrix * allowed_circle_collision
+    np.fill_diagonal(collision_mask, False)  # Ignore self-collisions
+
+    return collision_mask
+
+
+def _get_dist_and_rad_sum(circles):
+    circle_centers = circles[:, 0:2]
+    circle_radii = circles[:, 2]
+    circle_centers_diff = circle_centers[:, np.newaxis, :] - circle_centers[np.newaxis, :, :]
+    dist_matrix = np.linalg.norm(circle_centers_diff, axis=-1)
+    radius_sum_matrix = circle_radii[:, np.newaxis] + circle_radii[np.newaxis, :]
+    return dist_matrix, radius_sum_matrix
+
+
 def _draw_circle(output, r, x, y):
     # draw the circle in the output image, then draw a rectangle
     # corresponding to the center of the circle
-    cv2.circle(output, (x, y), r, (240, 155, 90), 4)
+    cv2.circle(output, (x, y), r, FOUND_CIRCLES_COLOR, 4)
+
+
+def _write_all_circles_numbers(output, circles):
+    for i, (x, y, r) in enumerate(circles):
+        _write_circle_number(output, i, x, y)
+
+
+def _write_circle_number(output, i, x, y):
+    cv2.putText(output, f"{i}", (x, y), cv2.FONT_HERSHEY_SIMPLEX, 4, FOUND_CIRCLES_COLOR, 3)
 
 
 def _connect_neighbohr_circle_centers(circles, neighbour_circles, output):
     for i, (x, y, r) in enumerate(circles):
         for j, (x2, y2, r2) in enumerate(circles):
             if neighbour_circles[i, j]:
-                cv2.line(output, (x, y), (x2, y2), (0, 0, 255), 2)
+                cv2.line(output, (x, y), (x2, y2), CONNECT_CIRCLES_COLOR, 2)
 
 
 def _find_circles(image_path, max_rad_percent, min_rad_percent, dp):
@@ -154,7 +176,7 @@ def _find_circles(image_path, max_rad_percent, min_rad_percent, dp):
     image = cv2.imread(image_path)
     output = image.copy()
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    canny_threshold_upper = np.percentile(gray, 40, method="weibull")
+    canny_threshold_upper = np.percentile(gray, 50, method="weibull")
     canny_threshold_lower = np.percentile(gray, 10, method="weibull")
     canny = cv2.Canny(gray, canny_threshold_lower, canny_threshold_upper, 11)
     imwrite(fr"{__file__}/../../../canny/{image_path.name}.canny.jpg", canny)
