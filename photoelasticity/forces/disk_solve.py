@@ -25,7 +25,7 @@ def solve_disk(image_path, forces_guess, angles, radius):
         return
     with start_matlab() as eng:
         matlabed_forces_guess = matlab.double(forces_guess)
-        matlabed_angles = matlab.double(angles.tolist())
+        matlabed_angles = matlab.double(angles)
         matlabed_radius = matlab.double(float(radius) / 100.0)
         matlabed_fsigma = matlab.double(float(fsigma))
 
@@ -46,18 +46,18 @@ def solve_multiple_disks(circles_image_paths, circle_radiuses, neighbour_circles
     for i, image_path in enumerate(set(circles_image_paths)):
         image_path = Path(image_path)
         angles = neighbour_circles_angle[i]
-        angles = (angles[~np.isnan(angles)] + np.pi) % (2 * np.pi)
         if len(angles) > 1:
             (forces, alphas, img_final) = solve_disk(image_path, [4500] * len(angles), angles,
                                                      circle_radiuses[i])
             if forces is None:
                 continue
+            pythoned_forces = np.array(forces)[0]
             full_image_path = image_path.parent
             finals_dir = Path(fr"{__file__}/../../../finals/{full_image_path.name}").resolve()
             finals_dir.mkdir(exist_ok=True, parents=True)
             cv2.imwrite(str(finals_dir / f"{i}.jpg"), img_final)
             logging.info(f"""For image {image_path.parent.name} of number {image_path.stem}:
-            Forces: {forces}
+            Forces: {pythoned_forces}
             Alphas: {alphas}
             """)
-            draw_graphs(forces, f"Forces map for {i} of {full_image_path.name}")
+            draw_graphs(pythoned_forces, f"Forces map for {i} of {full_image_path.name}")

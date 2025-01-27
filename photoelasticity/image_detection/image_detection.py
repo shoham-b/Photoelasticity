@@ -37,8 +37,8 @@ def extract_circle_and_count_stripes(image_path: WindowsPath, min_rad_percent, m
 
 def extract_multiple_circles_and_count_stripes(image_path: WindowsPath, min_rad_percent, max_rad_percent,
                                                use_cache, dp) -> np.array:
-    # if use_cache and ((cached := cache.get(image_path)) is not None):
-    #     return cached
+    if use_cache and ((cached := cache.get(image_path)) is not None):
+        return cached
 
     gray, output, photoelastic_circles = _find_prominent_circles(dp, image_path, max_rad_percent, min_rad_percent)
 
@@ -47,8 +47,9 @@ def extract_multiple_circles_and_count_stripes(image_path: WindowsPath, min_rad_
         [photoelastic_circles, small_blue_circles]) if small_blue_circles is not None else photoelastic_circles
     neighbour_circles = _find_neighbour_circles_matrix(all_circles, allowed_neigbhor_distance)
     neighbour_circles_angle = _find_circle_center_angles(all_circles)
-    angles_per_photoelastic_circle = neighbour_circles_angle[:len(photoelastic_circles), :]
-    angles_per_photoelastic_circle = angles_per_photoelastic_circle[~np.isnan(angles_per_photoelastic_circle)]
+    angle_or_none = np.where(neighbour_circles, neighbour_circles_angle, np.nan)
+    angles_per_photoelastic_circle = [[angle for angle in neigh if not np.isnan(angle)] for neigh in
+                                      angle_or_none[:len(photoelastic_circles)]]
 
     circles_dir = Path(fr"{__file__}/../../../circles/{image_path.stem}").resolve()
     circles_dir.mkdir(exist_ok=True, parents=True)
@@ -153,7 +154,7 @@ def _find_circles(image_path, max_rad_percent, min_rad_percent, dp):
     image = cv2.imread(image_path)
     output = image.copy()
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    canny_threshold_upper = np.percentile(gray, 50, method="weibull")
+    canny_threshold_upper = np.percentile(gray, 40, method="weibull")
     canny_threshold_lower = np.percentile(gray, 10, method="weibull")
     canny = cv2.Canny(gray, canny_threshold_lower, canny_threshold_upper, 11)
     imwrite(fr"{__file__}/../../../canny/{image_path.name}.canny.jpg", canny)
@@ -194,9 +195,10 @@ def _find_small_blue_circles(image_path, dp=1):
                                dp, min_radius,
                                param2=15,
                                minRadius=min_radius, maxRadius=max_radius)
-    filtered_circles = _filter_colliding_circles(circles.astype(int)[0])
-    if filtered_circles is None:
+
+    if circles is None:
         return None
+    filtered_circles = _filter_colliding_circles(circles.astype(int)[0])
     return filtered_circles
 
 

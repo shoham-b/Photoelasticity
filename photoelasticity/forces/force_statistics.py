@@ -44,16 +44,17 @@ def predicted_CDF(x, lambda_a, lambda_b):
             (scipy.special.erfc(expr1)))
 
 
-def draw_graphs(forces, title=""):
-    forces = forces / np.average(forces)  # make the forces unitless
-    if np.var(forces) == 0:
-        logging.warn(f"Variance of forces is 0, skipping drawing graphs for {title}")
+def draw_graphs(forces, title):
+    filtered_forces = forces[~np.isclose(forces,0.0)] # filter out the forces that are close to 0
+    normalized_forces = filtered_forces / np.average(filtered_forces)  # make the forces unitless
+    if np.var(normalized_forces) == 0:
+        logging.warning(f"Variance of forces is 0, skipping drawing graphs for {title}")
         return
-    z = forces.shape[0]
-    (lambda_a, lambda_b, variance) = find_force_dist_coeffs(forces)
+    z = normalized_forces.shape[0]
+    (lambda_a, lambda_b, variance) = find_force_dist_coeffs(normalized_forces)
 
     # draw the cumulative density functions of the unitless forces:
-    data_xs = np.sort(np.array(forces))
+    data_xs = np.sort(np.array(normalized_forces))
     data_ys = np.array([float(i + 1) / z for i in range(z)])
 
     print(data_ys / predicted_CDF(data_xs, lambda_a, lambda_b))
