@@ -18,17 +18,17 @@ def regenerate_day3_cache():
     day_data = get_day_data(3)
     column_data, box_data = day_data[:9], day_data[9:]
 
-    dp = 2.3
+    dp = 2.5
     with with_pool() as pool:
-        pool.starmap(extract_multiple_circles_and_count_stripes,
-                     [(data_path, 0.43, 0.5, False, dp) for data_path in column_data])
+        # pool.starmap(extract_multiple_circles_and_count_stripes,
+        #              [(data_path, 0.43, 0.5, False, dp) for data_path in column_data])
         pool.starmap(extract_multiple_circles_and_count_stripes,
                      [(data_path, 0.125, 0.34, False, dp) for data_path in box_data])
 
 
 def run_box(data_path, use_cache, dp):
     images, radius, angles = extract_multiple_circles_and_count_stripes(data_path,
-                                                                        0.125, 0.34,
+                                                                        0.125, 0.38,
                                                                         use_cache=use_cache,
                                                                         dp=dp)
     solve_multiple_disks(images, radius, angles)

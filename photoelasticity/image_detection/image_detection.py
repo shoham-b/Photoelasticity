@@ -34,7 +34,7 @@ def extract_circle_and_count_stripes(image_path: WindowsPath, min_rad_percent, m
 
 
 def extract_multiple_circles_and_count_stripes(image_path: WindowsPath, min_rad_percent, max_rad_percent,
-                                               use_cache, dp, ignore_images={}) -> np.array:
+                                               use_cache, dp, ignore_disks=set()) -> np.array:
     if use_cache and ((cached := cache.get(image_path)) is not None):
         return cached
 
@@ -45,7 +45,9 @@ def extract_multiple_circles_and_count_stripes(image_path: WindowsPath, min_rad_
         [photoelastic_circles, small_blue_circles]) if small_blue_circles is not None else photoelastic_circles
     neighbour_circles = _find_neighbour_circles_matrix(all_circles)
     neighbour_circles_angle = _find_circle_center_angles(all_circles)
-    neighbour_circles_angle[:, ignore_images] = np.nan
+    for to_ignore in ignore_disks:
+        neighbour_circles_angle[to_ignore, :] = np.nan
+        neighbour_circles_angle[:, to_ignore] = np.nan
     angle_or_none = np.where(neighbour_circles, neighbour_circles_angle, np.nan) + np.pi
 
     angles_per_photoelastic_circle = [[angle for angle in neigh if not np.isnan(angle)] for neigh in
@@ -179,7 +181,7 @@ def _find_circles(image_path, max_rad_percent, min_rad_percent, dp):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     canny_threshold_upper = np.percentile(gray, 50, method="weibull")
     canny_threshold_lower = np.percentile(gray, 10, method="weibull")
-    canny = cv2.Canny(gray, canny_threshold_lower, canny_threshold_upper, 11)
+    canny = cv2.Canny(gray, canny_threshold_lower, canny_threshold_upper, 60)
     imwrite(fr"{__file__}/../../../canny/{image_path.name}.canny.jpg", canny)
     image_height, image_width = gray.shape
     max_fitting_radius = min(image_height, image_width) // 2

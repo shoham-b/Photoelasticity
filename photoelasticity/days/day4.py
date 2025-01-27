@@ -16,12 +16,15 @@ def do_day_4(use_cache=True):
 def do_special_day_4(use_cache=True):
     logging.basicConfig(level=logging.INFO)
     data_path = Path(r"C:\Users\shoha\PycharmProjects\Photoelasticity\data\day4\DSC_0021.jpg")
-    ignore_images = {0, 1, 3, 7, 13, 14, 15, 17}
+
+    ignore_disks = {3, 13}
     images, radius, angles = extract_multiple_circles_and_count_stripes(data_path,
                                                                         0.15, 0.31,
-                                                                        use_cache=use_cache, dp=1.5,ignore_images=ignore_images)
+                                                                        use_cache=use_cache, dp=1.5,
+                                                                        ignore_disks=ignore_disks)
+    ignore_disks = {0, 1, 7, 14, 15, 17}
     logging.info(f"Solving disk for image {data_path.stem}")
-    solve_multiple_disks(images, radius, angles, ignore_images)
+    solve_multiple_disks(images, radius, angles, ignore_disks)
 
 
 def regenerate_day4_cache():
