@@ -1,4 +1,5 @@
 import logging
+import math
 from pathlib import Path
 
 import diskcache
@@ -19,7 +20,7 @@ fsigma = 6265
 # rm = matlab.double(0.03)
 # beta = matlab.double([0.6 * pi / 2, pi + 0.2 * pi / 2, 3 * pi / 2])
 # z = 3
-force_cache = diskcache.Cache("../../../force_cache")
+force_cache = diskcache.Cache(fr"{__file__}/../../../force_cache")
 
 
 @force_cache.memoize()
@@ -58,29 +59,34 @@ def solve_multiple_disks(circles_image_paths, circle_radiuses, neighbour_circles
     all_angles, all_forces = find_all_disk_forces(circle_radiuses, circles_image_paths, name,
                                                   neighbour_circles_angle, ignore_images)
 
-    tangent_forces = [force * np.sin(angle) for force, angle in zip(all_forces, all_angles)]
-    normal_forces = [force * np.cos(angle) for force, angle in zip(all_forces, all_angles)]
+    flat_forces = [force.tolist() for sublist in all_forces for force in sublist]
+    flat_angles = [angle for sublist in all_angles for angle in sublist]
+    normal_forces = np.abs(np.array([force * math.sin(angle) for force, angle in zip(flat_forces, flat_angles)]))
+    tangent_forces = np.abs(np.array([force * math.cos(angle) for force, angle in zip(flat_forces, flat_angles)]))
 
-    print(f"Normal forces: {normal_forces}")
-    print(f"Tangent forces: {tangent_forces}")
 
-    flat_normal_forces = np.abs(np.array([force for sublist in normal_forces for force in sublist]))
-    flat_normal_forces = flat_normal_forces[~np.isclose(flat_normal_forces, 0.0)]  # filter out the forces that are close to 0
-    flat_tangent_forces = np.abs(np.array([force for sublist in tangent_forces for force in sublist]))
-    flat_tangent_forces = flat_tangent_forces[~np.isclose(flat_tangent_forces, 0.0)]  # filter out the forces that are close to 0
+    logging.info(f"Unfiltered flat forces: {flat_forces}")
+    logging.info(f"Unfiltered flat normal forces: {normal_forces}")
+    logging.info(f"Unfiltered flat tangent forces: {tangent_forces}")
 
-    normal_forces_threshold = np.average(flat_normal_forces) * 0.1
-    tangent_forces_threshold = np.average(flat_tangent_forces) * 0.2
-    top_normal_forces = flat_normal_forces[flat_normal_forces > normal_forces_threshold]
-    top_tangent_forces = flat_tangent_forces[flat_tangent_forces > tangent_forces_threshold]
+    force_threshold = np.percentile(flat_forces, 10)
 
-    logging.info(f"Normal forces: {flat_normal_forces.tolist()}")
-    logging.info(f"Tangent forces: {flat_tangent_forces.tolist()}")
+    filtered_normal_forces = normal_forces[flat_forces > force_threshold]
+    filtered_tangent_forces = tangent_forces[flat_forces > force_threshold]
 
-    title = f"{name} normal forces"
-    draw_graphs(top_normal_forces, title)
-    title = f"{name} tangent forces"
-    draw_graphs(top_tangent_forces, title)
+    logging.info(f"Normal forces: {filtered_normal_forces.tolist()}")
+    logging.info(f"Tangent forces: {filtered_tangent_forces.tolist()}")
+
+    try:
+        title = f"Normal forces"
+        draw_graphs(filtered_normal_forces, title)
+    except FloatingPointError:
+        logging.error(f"Failed to draw graph for {title}")
+    try:
+        title = f"Tangent forces"
+        draw_graphs(filtered_tangent_forces, title)
+    except FloatingPointError:
+        logging.error(f"Failed to draw graph for {title}")
     return
 
 

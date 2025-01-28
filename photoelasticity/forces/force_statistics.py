@@ -1,5 +1,4 @@
 # see Eq.(21)--(26) of : 10.1103/PhysRevE.98.012905
-import logging
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -19,7 +18,7 @@ def find_y(sig_sq):  # invert Eq.(24)
         except Exception as e:
             print("sigma squared =", sig_sq)
             print("Search for y(sigma) failed, the variance might be too big")
-            exit(3)
+            raise
         return err
 
     root_result = scipy.optimize.root(err, [0])
@@ -44,30 +43,32 @@ def predicted_CDF(x, lambda_a, lambda_b):
             (scipy.special.erfc(expr1)))
 
 
-def draw_graphs(forces, title):
-    filtered_forces = forces[~np.isclose(forces,0.0)] # filter out the forces that are close to 0
-    normalized_forces = filtered_forces / np.average(filtered_forces)  # make the forces unitless
-    if np.var(normalized_forces) == 0:
-        logging.warning(f"Variance of forces is 0, skipping drawing graphs for {title}")
-        return
-    plt.figure()
-    z = normalized_forces.shape[0]
-    (lambda_a, lambda_b, variance) = find_force_dist_coeffs(normalized_forces)
-
-    # draw the cumulative density functions of the unitless forces:
-    data_xs = np.sort(np.array(normalized_forces))
+def draw_graphs(forces, title="", force_err=0.2):
+    # forces = (forces - np.min(forces))
+    # forces = forces/np.max(forces)
+    forces = forces / np.mean(forces)
+    z = forces.shape[0]
+    data_xs = np.sort(np.array(forces))
     data_ys = np.array([float(i + 1) / z for i in range(z)])
+    # plt.plot(data_xs,data_ys,'.',markersize=15)
+    plt.errorbar(data_xs, data_ys, xerr=force_err * data_xs, linestyle='None', marker='.', markersize=15, capsize=3)
 
-    print(data_ys / predicted_CDF(data_xs, lambda_a, lambda_b))
-    # delta=np.sqrt(np.average((data_ys/predicted_CDF(data_xs,lambda_a,lambda_b) - 1)**2))
-
-    plt.plot(data_xs, data_ys, '.')
     xs = np.arange(0.0, 5.0, 0.02)
-    plt.plot(xs, predicted_CDF(xs, lambda_a, lambda_b), 'r--')
+    (lambda_a, lambda_b, variance) = find_force_dist_coeffs(forces)
+    plt.plot(xs, predicted_CDF(xs, lambda_a, lambda_b), 'r--', linewidth=3)
+    plot_text = "σ²=" + str(round(variance, 2)) + "\nlambda_a=" + str(round(lambda_a, 2)) + "\nlambda_b=" + str(
+        round(lambda_b, 2))
+    plt.text(2, 0.1, plot_text)
+
     plt.xlabel('Unitless force')
-    plt.ylabel('Cumulative distribution function')
+    plt.ylabel('CDF')
     plt.title(title)
-    plt.text(3.5, 0.1, "σ²=" + str(round(variance, 2)), fontsize=15)  # +"\n"+"δ="+str(round(delta,2)))
+    plt.subplots_adjust(bottom=0.15, left=0.15)
+
+    save_plot(title)
+
+
+def save_plot(title):
     main_image_dir = Path(rf"{__file__}/../../../forces_graphs").resolve()
     main_image_dir.mkdir(parents=True, exist_ok=True)
     graph_path = main_image_dir / f"{title}.png"
