@@ -18,6 +18,7 @@ def do_special_day_4(use_cache=True):
     data_path = Path(r"C:\Users\shoha\PycharmProjects\Photoelasticity\data\day4\DSC_0021.jpg")
 
     ignore_disks = {3, 13}
+    ignore_negibhors = ((11, 15))
     images, radius, angles = extract_multiple_circles_and_count_stripes(data_path,
                                                                         0.15, 0.31,
                                                                         use_cache=use_cache, dp=1.5,
