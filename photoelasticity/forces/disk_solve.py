@@ -14,7 +14,7 @@ from photoelasticity.tools.matlab import start_matlab
 np.set_printoptions(precision=3)
 
 pi = np.pi
-fsigma = 6265
+fsigma = 400
 
 #
 # forces0 = matlab.double([50, 50, 30])
@@ -113,7 +113,18 @@ def find_all_disk_forces(circle_radiuses, circles_image_paths, name, neighbour_c
 def find_single_disk(angles, final_image_path, image_path, radius):
     logging.info(f"""Solving disk for image {image_path.stem}
     with angles {[np.round(angle / np.pi, 4).tolist() for angle in angles]}""")
-    (img_final, forces, alphas) = solve_disk(image_path, [1700] * len(angles), angles,
+    force_guess = [100 * find_nearest_angle(angles, angle) / pi for angle in angles]
+    (img_final, forces, alphas) = solve_disk(image_path, force_guess, angles,
                                              radius)
     plt.imsave(final_image_path, img_final)
     return alphas, forces, img_final
+
+
+def find_nearest_angle(angles, angle):
+    other_angles = [a for a in angles if a != angle]
+
+    def minimize_function(x):
+        abs_diff = abs(x - angle)
+        return min(abs_diff, 2 * pi - abs_diff)
+
+    return min(other_angles, key=minimize_function)

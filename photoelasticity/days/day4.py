@@ -25,7 +25,8 @@ def do_special_day_4(use_cache=True):
                                                                         ignore_disks=ignore_disks)
     ignore_disks = {0, 1, 7, 14, 15, 17}
     logging.info(f"Solving disk for image {data_path.stem}")
-    solve_multiple_disks(images, radius, angles, ignore_disks)
+    logging.info(f"all radiuses: {radius}")
+    # solve_multiple_disks(images, radius, angles, ignore_disks)
 
 
 def regenerate_day4_cache():

@@ -35,7 +35,7 @@ def extract_circle_and_count_stripes(image_path: WindowsPath, min_rad_percent, m
 
 
 def extract_multiple_circles_and_count_stripes(image_path: WindowsPath, min_rad_percent, max_rad_percent,
-                                               use_cache, dp, ignore_disks=(),neigbhors_to_ignore=()) -> np.array:
+                                               use_cache, dp, ignore_disks=(), neigbhors_to_ignore=()) -> np.array:
     if use_cache and ((cached := cache.get(image_path)) is not None):
         return cached
 
@@ -148,6 +148,19 @@ def _find_collision_circles_matrix(circles):
     return collision_mask
 
 
+def _find_circle_in_circle(circles):
+    circle_centers = circles[:, 0:2]
+    circle_radii = circles[:, 2]
+    circle_centers_diff = circle_centers[:, np.newaxis, :] - circle_centers[np.newaxis, :, :]
+    dist_matrix = np.linalg.norm(circle_centers_diff, axis=-1)
+
+    # Create a mask to filter out colliding circles
+    collision_mask = dist_matrix < np.maximum(circle_radii[:, np.newaxis], circle_radii[np.newaxis, :])
+    np.fill_diagonal(collision_mask, False)  # Ignore self-collisions
+
+    return collision_mask
+
+
 def _get_dist_and_rad_sum(circles):
     circle_centers = circles[:, 0:2]
     circle_radii = circles[:, 2]
@@ -182,11 +195,10 @@ def _connect_neighbohr_circle_centers(circles, neighbour_circles, output):
 def _find_circles(image_path, max_rad_percent, min_rad_percent, dp):
     # load the image, clone it for output, and then convert it to grayscale
     image = cv2.imread(image_path)
-    output = image.copy()
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     canny_threshold_upper = np.percentile(gray, 50, method="weibull")
     canny_threshold_lower = np.percentile(gray, 10, method="weibull")
-    canny = cv2.Canny(gray, canny_threshold_lower, canny_threshold_upper, 60)
+    canny = cv2.Canny(gray, canny_threshold_lower, canny_threshold_upper, 20)
     imwrite(fr"{__file__}/../../../canny/{image_path.name}.canny.jpg", canny)
     image_height, image_width = gray.shape
     max_fitting_radius = min(image_height, image_width) // 2
@@ -200,7 +212,7 @@ def _find_circles(image_path, max_rad_percent, min_rad_percent, dp):
     # ensure at least some circles were found
     if circles is None:
         raise ImageError("No circles detected")
-    return circles, gray, output
+    return circles, gray, image.copy()
 
 
 def _find_small_blue_circles(image_path, dp=1):
